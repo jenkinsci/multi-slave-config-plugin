@@ -1,0 +1,115 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+    <j:set var="sessionId" value="${request.session.getId()}"/>
+
+    <st:bind var="it" value="${it}"/>
+
+    <l:layout title="${it.DisplayName}" permission="${it.requiredPermission}">
+
+        <st:include page="sidepanel.jelly"/>
+
+        <l:header>
+            <st:include page="javascript.jelly"/>
+            <style type="text/css">
+                #labels, #description, #name, #remoteFS { width: 200px;}
+                #executors {width:60px;}
+            </style>
+        </l:header>
+
+        <l:main-panel>
+            <h3>${it.displayName} -
+                <j:if test="${it.isConfigureMode()}">
+                    ${%Configure slaves}
+                </j:if>
+                <j:if test="${it.isDeleteMode()}">
+                    ${%Delete slaves}
+                </j:if>
+                <!--TODO: Add title for the launch mode -->
+            </h3>
+            <j:if test="${it.isConfigureMode()}">
+                Select which slaves to configure. Filter slaves by using the text boxes.
+            </j:if>
+            <j:if test="${it.isDeleteMode()}">
+                Select which slaves to delete. Filter slaves by using the text boxes.
+            </j:if>
+            <!--TODO: Add description for the launch mode -->
+
+            <form action="selectSlaves" method="post" name="viewerForm">
+                <table id="table">
+                    <br />
+                    <tr>
+                        <td>
+                            ${%Part of name}:
+                        </td>
+                        <td>
+                            ${%Remote FS}:
+                        </td>
+                    </tr>
+                    <tr class="inherit">
+                        <td>
+                            <st:nbsp/><st:nbsp/><f:textbox name="name" id="name" onchange="updateTable()" onkeyup="updateTable()"/>
+                        </td>
+                        <td>
+                            <st:nbsp/><st:nbsp/><f:textbox name="remoteFS" id="remoteFS" onchange="updateTable()" onkeyup="updateTable()"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            ${%Labels}:
+                        </td>
+                        <td>
+                            ${%Description}:
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <st:nbsp/><st:nbsp/><f:textbox name="label" id="labels" onchange="updateTable()" onkeyup="updateTable()"/>
+                        </td>
+                        <td>
+                            <st:nbsp/><st:nbsp/><f:textbox name="description" id="description" onchange="updateTable()" onkeyup="updateTable()"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <st:nbsp/>${%# of executors}:
+                        </td>
+                    </tr>
+                </table>
+                <table>
+                    <f:entry>
+                        <f:textbox clazz="positive-number" name="executors" id="executors" onchange="updateTable()" onkeyup="updateTable()"/>
+                    </f:entry>
+                </table>
+
+                <script>$('name').focus();</script>
+
+                <div id="nbrOfSlaves"/>
+                <a href="#" onclick="checkAll()">${%Check all}</a> / <a href="#" onclick="unCheckAll()">${%Uncheck all}</a> / <a href="#" onclick="makeAllEmpty()">${%Clear filters}</a>
+
+                <table id="slaves" class="sortable pane bigtable">
+                    <tr align="left">
+                        <th width="20px">${%Apply}</th>
+                        <th width="45px">${%Status}</th>
+                        <th initialSortDir="down">${%Name}</th>
+                        <th>${%Labels}</th>
+                        <th width="30px">${%# of ex.}</th>
+                        <th>${%Remote FS root}</th>
+                        <th>${%Description}</th>
+                    </tr>
+                </table>
+                <table>
+                    <f:entry>
+                        <input type="submit" name="${%Submit}" value="Proceed" id="submit" />
+                    </f:entry>
+
+                    <!--TODO: Maybe display a checkbox that the user can uncheck if he doesn't want to show a log for the launch-->
+
+                    <script type="text/javascript">
+                        var submitButton = makeButton(document.getElementById('submit'),null);
+                        updateTable();
+                    </script>
+
+                </table>
+            </form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

@@ -1,0 +1,44 @@
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
+    <l:layout title="${it.DisplayName}" norefresh="true" permission="${it.requiredPermission}">
+        <l:side-panel>
+            <l:tasks>
+                <l:task icon="images/24x24/up.png" href="${rootURL}/" title="${%Back to Dashboard}"/>
+                <l:task icon="images/24x24/setting.png" href="configureRedirect" title="${%Configure slaves}"/>
+                <l:task icon="images/24x24/new-computer.png" href="addRedirect" title="${%Add slaves}"/>
+                <l:task icon="images/24x24/edit-delete.png" href="deleteRedirect" title="${%Delete slaves}"/>
+            </l:tasks>
+        </l:side-panel>
+        <l:main-panel>
+            <h3>${it.displayName}</h3>
+            <div class="help" style="display: block; width:300px">
+                <div>
+                    This plugin allows administrators to configure, add and delete several dumb slaves at the same time.
+                    <br/>
+                    <b>Use the sidebar links to get started!</b>
+                    <br/><br/>
+                    Some things to know:
+                    <ul>
+                        <li>
+                            The environment variable $NAME (for slave name) can be used in most textboxes when changing
+                            settings on slaves. For example, you can set the description to "Description for $NAME" and
+                            get the variable expanded for each slave.
+                        </li>
+                        <li>
+                            This plugin will only affect dumb slaves, not other node types.
+                        </li>
+                        <li>
+                            If you choose to add new slaves and copy an existing slave,
+                            its node properties will get copied as well.
+                        </li>
+                    </ul>
+                </div></div>
+
+            <noscript>
+                <b><font color="RED">
+                    Note: You need to activate Javascript in order for this plugin to work properly!
+                </font></b>
+            </noscript>
+
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

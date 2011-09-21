@@ -1,0 +1,72 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout title="${it.DisplayName}" permission="${it.requiredPermission}" norefresh="true" >
+        <j:set var="descriptor" value="${it.descriptor}"/>
+        <st:include page="sidepanel.jelly"/>
+        <l:header>
+            <st:include page="javascript.jelly"/>
+            <style type="text/css">
+                #copyFrom, #slaveName { width:200px; }
+                #first, #last { width:100px; }
+                .setting-description {
+                    font-family: Verdana, Helvetica, sans serif;
+                    font-size: 11px;
+                    font-weight: bolder;
+                }
+            </style>
+        </l:header>
+        <l:main-panel>
+
+            <h3>${it.displayName} - ${%Add slaves}</h3>
+            <f:form method="post" action="createSlaves" name="createSlavesForm">
+                <f:description>Create slaves by names separated with space: </f:description>
+                <f:entry help="${rootURL}/plugin/${it.getUrlName()}/help-AddSlaves.html">
+                    <f:textbox id="slaveNames" name="slaveNames" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
+                </f:entry>
+                <f:description>Create slaves by name and number span:</f:description>
+                <f:entry help="${rootURL}/plugin/${it.getUrlName()}/help-AddSlavesBySpan.html">
+                    ${%Slave name}:
+                    <f:textbox id="slaveName" name="slaveName" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
+                    ${%from}:
+                    <f:textbox id="first" clazz="positive-number" name="first" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
+                    ${%to}:
+                    <f:textbox id="last" clazz="positive-number" name="last" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
+                </f:entry>
+                <script>$('slaveNames').focus();</script>
+
+                <f:block>
+                    <input type="radio" name="mode" value="newSlave" selected="true" checked='checked' onchange="updateOk(this.form)" onclick="updateOk(this.form)"/>
+                    <st:nbsp/>
+                    <b>${%New dumb slave}</b>
+                </f:block>
+                <f:entry>
+                    Adds plain, dumb slaves to Jenkins. This is called "dumb" because Jenkins doesn't provide higher level of integration with these slaves, such as dynamic provisioning.
+                    Select this type if no other slave types apply — for example such as when you are adding a physical computer, virtual machines managed outside Jenkins, etc.
+                </f:entry>
+                <f:block>
+                    <input type="radio" name="mode" id="copy" value="copySlave" onchange="updateOk(this.form)" onclick="updateOk(this.form)"/>
+                    <st:nbsp/>
+                    <b>${%Copy existing slave}</b>
+                </f:block>
+
+                <f:entry field="names">
+                    ${%Copy from}
+                    <f:textbox id="copyFrom" name="copyFrom" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/><br/>
+                    <table>
+                        <td>
+                            <f:checkbox name="extendedEnvInterpretation" checked="true"/></td><td>
+                        When copying, search for string occurrences of this slave name<br/>
+                        in settings and replace with the new names on added slaves.
+                    </td>
+                    </table>
+                </f:entry>
+                <f:block>
+
+                    <input type="submit" name="Submit" value="Proceed" id="ok" style="margin-left:5em" />
+                </f:block>
+            </f:form>
+        </l:main-panel>
+        <script type="text/javascript">
+            var okButton = makeButton(document.getElementById('ok'),null);
+        </script>
+    </l:layout>
+</j:jelly>

@@ -1,0 +1,24 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout title="${it.DisplayName}" norefresh="true" permission="${it.requiredPermission}">
+        <j:set var="sessionId" value="${request.session.getId()}"/>
+        <j:set var="nodeList" value="${it.getNodeList(sessionId)}"/>
+        <j:set var="launcher" value="${nodeList.getLauncher()}"/>
+        <j:set var="retentionStrategy" value="${nodeList.getRetentionStrategy()}"/>
+        <st:include page="sidepanel.jelly"/>
+        <l:main-panel>
+            <h3>${it.displayName} - ${%Add slaves}</h3>
+            <b>${%Completed!}</b> The slaves have been added with the following settings:<br/>
+            <table>
+                <tr><td><b>${%Description}:</b> </td><td> ${nodeList.getCommon('DESCRIPTION')} <br/></td></tr>
+                <tr><td><b>${%# of executors}:</b> </td><td> ${nodeList.getCommon('NUM_EXECUTORS')} <br/></td></tr>
+                <tr><td><b>${%Remote FS root}:</b> </td><td> ${nodeList.getCommon('REMOTE_FS')} <br/></td></tr>
+                <tr><td><b>${%Labels}:</b> </td><td> ${nodeList.getCommon('LABELS')} <br/></td></tr>
+                <tr><td><b>${%Usage mode}:</b> </td><td> ${nodeList.getMode()} <br/></td></tr>
+                <tr><td><b>${%Launch method}:</b></td><td> <st:include page="launcher.jelly"/> </td></tr> <br/>
+                <tr><td><b>${%Availability}:</b> </td><td> <st:include page="retentionstrategy.jelly"/> <br/></td></tr>
+            </table>
+            <br/>
+            <st:include page="slavelister.jelly"/>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

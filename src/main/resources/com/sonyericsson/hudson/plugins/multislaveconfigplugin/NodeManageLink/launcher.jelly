@@ -1,0 +1,22 @@
+<j:jelly xmlns:j="jelly:core">
+    <j:set var="password" value="${launcher.password.getPlainText()}"/>
+    <j:choose>
+        <j:when test="${it.isManagedWindowsServiceLauncher(launcher)}">
+            ${%Managed Windows Service Launcher}
+            <br/><b>${%Username}:</b> ${launcher.userName}
+            <br/><b>${%Password}:</b> ${it.generateStars(password.length())}
+        </j:when>
+        <j:when test="${it.isCommandLauncher(launcher)}">
+            ${%Command Launcher}
+            <br/><b>${%Launch command}:</b> ${launcher.getCommand()}
+        </j:when>
+        <j:when test="${it.isJNLPLauncher(launcher)}">
+            ${%JNLP launcher}
+            <br/><b>${%Tunnel}:</b> ${launcher.tunnel}
+            <br/><b>${%JVM options}:</b> ${launcher.vmargs}
+        </j:when>
+        <j:otherwise>
+            ${launcher.getDescriptor().getDisplayName()}
+        </j:otherwise>
+    </j:choose>
+</j:jelly>

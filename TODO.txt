@@ -1,0 +1,10 @@
+Todo:
+
+* Add "launch slaves" option.
+* Tests for select all/ unselect all/ clear filters on the slavefilter page
+* Show the latest configuration changes on the start page
+* Try to use @QueryParameter on more pages instead of JSON objects?
+* Some kind of loading indicator when changes are being performed
+* Support for changing node properties
+* Stop creating JSON objects for the dynamic slave listing and use simple objects instead
+* Fix translations for the strings in the javascript files

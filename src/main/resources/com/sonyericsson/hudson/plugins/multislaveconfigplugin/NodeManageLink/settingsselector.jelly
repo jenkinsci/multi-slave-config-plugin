@@ -1,0 +1,134 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:u="/util">
+    <l:layout title="${it.DisplayName}" norefresh="true">
+        <j:set var="sessionId" value="${request.session.getId()}"/>
+        <j:set var="nodeList" value="${it.getNodeList(sessionId)}"/>
+        <st:include page="sidepanel.jelly"/>
+        <l:header>
+            <st:include page="javascript.jelly"/>
+            <style type="text/css">
+                .setting-description{
+                padding-bottom:10px;
+                color: blue;
+                font-size:1em;
+                min-height: 16px;
+                }
+            </style>
+        </l:header>
+        <l:main-panel>
+            <h3>${it.displayName} -
+                <j:if test="${it.isConfigureMode()}">
+                    ${%Configure slaves}
+                </j:if>
+                <j:if test="${it.isAddMode()}">
+                    ${%Add slaves}
+                </j:if>
+            </h3>
+            Mark with check boxes the settings you want to change, then edit the specific settings.
+            <f:form method="post" action="apply" name="settingsForm">
+                <br/>
+                <u:entry title="${%Description}" checkboxId="_description"
+                         description="${nodeList.getCommon('DESCRIPTION')==null ? '%DifferentDescriptions' : ''}"
+                         help="/help/system-config/master-slave/description.html">
+                    <f:textbox value="${nodeList.getCommon('DESCRIPTION')}" name="description" id="description" disabled="true"/>
+                </u:entry>
+                <u:entry title="${%# of executors}" checkboxId="_numExecutors"
+                         help="/help/system-config/master-slave/numExecutors.html"
+                         description="${nodeList.getCommon('NUM_EXECUTORS')==null ? '%DifferentNbrExecutors' : ''}">
+                    <f:textbox clazz="positive-number" name="numExecutors" id="numExecutors" disabled="true" value="${nodeList.getCommon('NUM_EXECUTORS')}"/>
+                </u:entry>
+                <u:entry title="${%Remote FS root}" checkboxId="_remoteFS"
+                         help="${rootURL}/plugin/${it.getUrlName()}/help-RemoteFS.html"
+                         description="${nodeList.getCommon('REMOTE_FS')==null ? '%DifferentRemoteFS' : ''}">
+                    <f:textbox name="remoteFS" id="remoteFS" disabled="true" value="${nodeList.getCommon('REMOTE_FS')}"/>
+                </u:entry>
+                <u:entry title="${%Set labels}" checkboxId="_labelString" help="${rootURL}/plugin/${it.getUrlName()}/help-SetLabels.html"
+                         description="${nodeList.getCommon('LABELS')==null ? '%DifferentLabels' : ''}">
+                    <f:textbox name="labelString" id="labelString" disabled="true" value="${nodeList.getCommon('LABELS')}"/>
+                </u:entry>
+                <u:entry title="${%Add labels}" checkboxId="_addLabelString" help="${rootURL}/plugin/${it.getUrlName()}/help-AddLabels.html">
+                    <f:textbox name="addLabelString" id="addLabelString" disabled="true"/>
+                </u:entry>
+                <u:entry title="${%Remove labels}" checkboxId="_removeLabelString" help="${rootURL}/plugin/${it.getUrlName()}/help-RemoveLabels.html">
+                    <f:textbox name="removeLabelString" id="removeLabelString" disabled="true"/>
+                </u:entry>
+                <u:entry title="${%Usage mode}" name="mode" checkboxId="_mode" help="/help/system-config/master-slave/usage.html"
+                         description="${nodeList.getMode()==null ? '%DifferentModes' : ''}">
+                    <select class="setting-input" id="mode" disabled="true" name="${name}">
+                        <j:forEach var="m" items="${h.getNodeModes()}">
+                            <f:option value="${m.name}" selected="${m==nodeList.getMode()}">${m.description}</f:option>
+                        </j:forEach>
+                    </select>
+                </u:entry>
+                <j:set var="commonLauncher" value="${nodeList.getLauncher()}"/>
+                <u:dropdownList name="slave.launcher" title="${%Launch method}" entry="_launcher" checkboxId="_launcherId"
+                                help="${rootURL}/plugin/${it.getUrlName()}/help-Launcher.html" id="launcherId"
+                                description="${nodeList.getLauncherDescription()}">
+                    <j:forEach var="d" items="${h.getComputerLauncherDescriptors()}">
+                        <f:dropdownListBlock value="${d.clazz.name}" name="${d.displayName}"
+                                             selected="${nodeList.getLauncher().getDescriptor()==d}"
+                                             title="${d.displayName}">
+                            <j:set var="descriptor" value="${d}"/>
+                            <j:set var="instance"
+                                   value="${nodeList.getLauncher().getDescriptor()==d ? nodeList.getLauncher() : null}"/>
+                            <f:invisibleEntry>
+                                <input type="hidden" name="stapler-class" value="${d.clazz.name}" />
+                            </f:invisibleEntry>
+                            <st:include from="${d}" page="${d.configPage}" optional="true"/>
+                        </f:dropdownListBlock>
+                    </j:forEach>
+                </u:dropdownList>
+                <j:set var="commonRetentionStrategy" value="${nodeList.getRetentionStrategy()}"/>
+                <u:dropdownList name="slave.retentionStrategy" title="${%Availability}" description="${nodeList.getRetentionDescription()}"
+                                entry="_retentionStrategy" checkboxId="_retentionStrategyId"
+                                help="/help/system-config/master-slave/availability.html" id="retentionStrategyId">
+                    <j:forEach var="d" items="${h.getRetentionStrategyDescriptors()}">
+                        <j:if test="${d != null}">
+                            <f:dropdownListBlock value="${d.clazz.name}" name="${d.displayName}"
+                                                 selected="${commonRetentionStrategy.getDescriptor()==d}"
+                                                 title="${d.displayName}">
+                                <j:set var="descriptor" value="${d}"/>
+                                <j:set var="instance"
+                                       value="${commonRetentionStrategy.getDescriptor()==d ? nodeList.getRetentionStrategy() : null}"/>
+                                <tr><td>
+                                    <input type="hidden" name="stapler-class" value="${d.clazz.name}" />
+                                </td></tr>
+                                <st:include from="${d}" page="${d.configPage}" optional="true"/>
+                            </f:dropdownListBlock>
+                        </j:if>
+                    </j:forEach>
+                </u:dropdownList>
+                <!-- Clears a few textboxes if the settings on the affected slaves are different -->
+                <j:if test="${it.isSimpleScheduledRetentionStrategy(commonRetentionStrategy)}">
+                    <j:if test="${nodeList.getCommon('UPTIME_MINS') == null}">
+                        <script>
+                            makeEmpty('retentionStrategy.upTimeMins');
+                        </script>
+                    </j:if>
+                </j:if>
+                <j:if test="${it.isRetentionStrategyDemand(commonRetentionStrategy)}">
+                    <j:if test="${nodeList.getCommon('IDLE_DELAY') == null}">
+                        <script>
+                            makeEmpty('retentionStrategy.idleDelay');
+                        </script>
+                    </j:if>
+                    <j:if test="${nodeList.getCommon('IN_DEMAND_DELAY') == null}">
+                        <script>
+                            makeEmpty('retentionStrategy.inDemandDelay');
+                        </script>
+                    </j:if>
+                </j:if>
+                <j:if test="${it.isManagedWindowsServiceLauncher(commonLauncher)}">
+                    <j:if test="${nodeList.getCommon('PASSWORD_STRING') == null}">
+                        <script>
+                            makeEmpty('_.password');
+                        </script>
+                    </j:if>
+                </j:if>
+                <table>
+                    <f:submit value="${%Save}"/>
+                </table>
+                <st:include page="slavelister.jelly"/>
+            </f:form>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

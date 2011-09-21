@@ -1,0 +1,16 @@
+<j:jelly xmlns:j="jelly:core">
+    <br/>
+    <b>${%Slaves affected}: </b>
+    <br/>
+    <j:forEach var="slave" items="${it.getNodeList(sessionId).sortByName()}">
+        <div style="min-width:150px; display: inline-block;">
+            <j:if test="${slave.toComputer() == null}">
+                <img src="${imagesURL}/16x16/computer-x.png" width="16" height="16"/>
+            </j:if>
+            <j:if test="${slave.toComputer() != null}">
+                <img src="${imagesURL}/16x16/${slave.toComputer().icon}" width="16" height="16" alt="${slave.toComputer().iconAltText}"/>
+            </j:if>
+            ${slave.DisplayName}
+        </div>
+    </j:forEach>
+</j:jelly>

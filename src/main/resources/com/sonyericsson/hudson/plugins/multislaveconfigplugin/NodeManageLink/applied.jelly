@@ -1,0 +1,77 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <l:layout title="${it.DisplayName}" norefresh="true" permission="${it.requiredPermission}">
+        <j:set var="sessionId" value="${request.session.getId()}"/>
+        <j:set var="nodeList" value="${it.getNodeList(sessionId)}"/>
+        <j:set var="launcher" value="${nodeList.getLauncher()}"/>
+        <j:set var="retentionStrategy" value="${nodeList.getRetentionStrategy()}"/>
+        <j:set var="lastChangedSettings" value="${it.getLastChangedSettings(sessionId)}"/>
+        <st:include page="sidepanel.jelly"/>
+        <l:main-panel>
+            <h3>${it.displayName} - ${%Configure slaves}</h3>
+            <b>${%Completed!}</b> The following changes have been applied:<br/><br/>
+            <table>
+                <j:if test="${lastChangedSettings.get('description') != null}">
+                    <tr>
+                        <td><b>${%Description}: </b> </td>
+                        <td> ${nodeList.getCommon('DESCRIPTION')} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('numExecutors') != null}">
+                    <tr>
+                        <td><b>${%# of executors}: </b></td>
+                        <td> ${nodeList.getCommon('NUM_EXECUTORS')} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('remoteFS') != null}">
+                    <tr>
+                        <td><b>${%Remote FS root}: </b></td>
+                        <td> ${nodeList.getCommon('REMOTE_FS')} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('setLabelString') != null}">
+                    <tr>
+                        <td><b>${%Set labels}: </b></td>
+                        <td> ${lastChangedSettings.get('setLabelString')} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('addLabelString') != null}">
+                    <tr>
+                        <td><b>${%Add labels}: </b></td>
+                        <td> ${lastChangedSettings.get('addLabelString')} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('removeLabelString') != null}">
+                    <tr>
+                        <td><b>${%Remove labels}: </b></td>
+                        <td>
+                            ${lastChangedSettings.get('removeLabelString')} <br/>
+                            <j:if test="${it.hadLabels(request.session.getId()) == false}">
+                                <font color="red">One or more of the labels to remove were not found on any slave!</font><br/>
+                            </j:if>
+                        </td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('mode') != null}">
+                    <tr>
+                        <td><b>${%Usage mode}: </b></td>
+                        <td> ${nodeList.getMode()} <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('launcher') != null}">
+                    <tr>
+                        <td><b>${%Launch method}: </b></td>
+                        <td><st:include page="launcher.jelly"/> <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('retentionStrategy') != null}">
+                    <tr>
+                        <td><b>${%Availability}: </b></td>
+                        <td><st:include page="retentionstrategy.jelly"/> <br/></td>
+                    </tr>
+                </j:if>
+            </table>
+            <br/><br/>
+            <st:include page="slavelister.jelly"/>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>

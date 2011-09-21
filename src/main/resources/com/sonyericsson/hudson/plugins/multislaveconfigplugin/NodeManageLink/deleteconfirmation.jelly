@@ -1,0 +1,27 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+    <l:layout title="${it.DisplayName}" permission="${it.requiredPermission}">
+        <j:set var="sessionId" value="${request.session.getId()}"/>
+        <st:include page="sidepanel.jelly"/>
+        <style>
+            .button { height:0 10px; }
+        </style>
+        <l:main-panel>
+            <h3>${it.displayName} - ${%Delete slaves}</h3>
+            Are you sure you want to delete the ${it.getNodeList(sessionId).size()} slaves listed below?<br/>
+            <table>
+                <tr>
+                    <td>
+                        <input type="button" value="${%Yes}" class="yui-button"
+                               onclick="document.location='deleteSlaves'" name="deleteSlavesInput"/>
+                    </td>
+                    <td>
+                        <input type="button" value="${%No}" class="yui-button"
+                               onclick="document.location='homeRedirect'" name="homeRedirectInput"/>
+                    </td>
+                </tr>
+            </table>
+            <br/><st:include page="slavelister.jelly"/>
+        </l:main-panel>
+    </l:layout>
+</j:jelly>
+

@@ -1,0 +1,21 @@
+<j:jelly xmlns:j="jelly:core">
+    <j:choose>
+        <j:when test="${it.isRetentionStrategyAlways(retentionStrategy)}">
+            Keep online as much as possible
+        </j:when>
+        <j:when test="${it.isRetentionStrategyDemand(retentionStrategy)}">
+            Take online needed, and offline when idle
+            <br/><b>${%In demand delay}:</b> ${retentionStrategy.getInDemandDelay()}
+            <br/><b>${%Idle delay}:</b> ${retentionStrategy.getIdleDelay()}
+        </j:when>
+        <j:when test="${it.isSimpleScheduledRetentionStrategy(retentionStrategy)}">
+            Take online according to schedule
+            <br/><b>${%Startup Schedule}:</b> ${retentionStrategy.getStartTimeSpec()}
+            <br/><b>${%Scheduled Uptime}:</b> ${retentionStrategy.getUpTimeMins()}
+            <br/><b>${%Keep on-line while jobs are running}:</b> ${retentionStrategy.isKeepUpWhenActive()}
+        </j:when>
+        <j:otherwise>
+            ${retentionStrategy.getDescriptor().getDisplayName()}
+        </j:otherwise>
+    </j:choose>
+</j:jelly>
