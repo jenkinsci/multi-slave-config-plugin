@@ -139,4 +139,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>maven.jenkins-ci.org</id>
+            <url>http://maven.jenkins-ci.org:8081/content/repositories/releases/</url>
+        </repository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:git:ssh://github.com/jenkinsci/multi-slave-config-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/jenkinsci/multi-slave-config-plugin.git</developerConnection>
+        <url>https://github.com/jenkinsci/multi-slave-config-plugin</url>
+    </scm>
 </project>
