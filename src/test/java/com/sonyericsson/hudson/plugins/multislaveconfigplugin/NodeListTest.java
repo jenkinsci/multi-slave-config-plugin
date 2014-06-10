@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -52,8 +53,13 @@ import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.DES
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.LABELS;
 import static hudson.model.Node.Mode.EXCLUSIVE;
 import static hudson.model.Node.Mode.NORMAL;
-import static org.junit.Assert.*;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 /**
  * Tests {@link NodeList} using JUnit Tests..

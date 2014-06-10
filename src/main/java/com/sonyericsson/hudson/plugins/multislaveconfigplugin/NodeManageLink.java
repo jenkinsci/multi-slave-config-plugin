@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -59,7 +60,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.CONFIGURE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.DELETE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 /**

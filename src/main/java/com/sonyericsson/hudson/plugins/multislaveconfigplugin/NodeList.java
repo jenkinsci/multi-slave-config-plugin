@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -50,7 +51,16 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IN_DEMAND_DELAY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IDLE_DELAY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.UPTIME_MINS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.START_TIME_SPEC;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.KEEP_UP_WHEN_ACTIVE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.USERNAME;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.PASSWORD_STRING;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.LAUNCH_COMMAND;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.TUNNEL;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.VM_ARGS;
 
 /**
  * Manages a list of nodes.

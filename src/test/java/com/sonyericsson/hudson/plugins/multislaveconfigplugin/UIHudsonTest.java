@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -37,7 +38,15 @@ import org.jvnet.hudson.test.HudsonTestCase;
 import java.io.IOException;
 import java.util.Collections;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.SET_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOVE_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.ADD_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.USAGE_MODE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.NBR_OF_EXECUTORS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.DESCRIPTION;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.LAUNCH_METHOD;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOTE_FS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.AVAILABILITY;
 import static hudson.model.Node.Mode.EXCLUSIVE;
 
 //CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: Tests.
