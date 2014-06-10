@@ -37,7 +37,9 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -150,6 +152,31 @@ public class SearchSlavesTest {
         NodeList result = SearchSlaves.getNodes(searchParameters);
         assertTrue(result.contains(dumbSlave));
         assertEquals(1, result.size());
+    }
+
+    /**
+     * Tests {@link SearchSlaves#getNodes(net.sf.json.JSONObject)}.
+     * Searching for DumbSlaves by full names separated by space.
+     */
+    @Test
+    public void testGetNodesByFullNames() {
+        DumbSlave dumbSlave2 = PowerMockito.mock(DumbSlave.class);
+        when(dumbSlave2.getNodeName()).thenReturn("slave2");
+        DumbSlave dumbSlave3 = PowerMockito.mock(DumbSlave.class);
+        when(dumbSlave3.getNodeName()).thenReturn("slave3");
+
+        List<Node> nodeList = new ArrayList<Node>();
+        nodeList.add(dumbSlave);
+        nodeList.add(dumbSlave2);
+        nodeList.add(dumbSlave3);
+
+        when(hudsonMock.getNodes()).thenReturn(nodeList);
+
+        searchParameters.put("fullNames", "slave  slave2");
+        NodeList result = SearchSlaves.getNodes(searchParameters);
+        assertTrue(result.contains(dumbSlave));
+        assertTrue(result.contains(dumbSlave2));
+        assertEquals(2, result.size());
     }
 
     /**
