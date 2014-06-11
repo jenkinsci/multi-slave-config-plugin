@@ -52,7 +52,9 @@
           }
           okButton.set('disabled',state(),false);
         }
-        updateOk(okButton.getForm());
+        if (typeof okButton != "undefined") { //This button only exists on some pages
+            updateOk(okButton.getForm());
+        }
 
         //To lock the input fields on the settingsSelector.jelly page
         //Applied on drop-down lists
@@ -112,6 +114,14 @@
                 }
             }
             updateTable();
+        }
+
+        //Sets the buttons for delete to disabled and redirects the user to the confirmation page.
+        //To be used when user presses "Yes" when deleting slaves.
+        function deleteSlavesRedirect() {
+            yesDeleteButton.set('disabled',true,true);
+            noDeleteButton.set('disabled',true,true);
+            document.location='deleteSlaves';
         }
 
         //Submits the search parameters to a java class that preforms a search.
