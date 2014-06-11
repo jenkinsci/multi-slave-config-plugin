@@ -169,7 +169,7 @@
                         var statusCell = newRow.insertCell(1);
                         statusCell.innerHTML = '<img src="${imagesURL}/32x32/' + object.icon + '" width="32" height="32" alt="' + object.iconAltText + '"/>';
                         var nameCell = newRow.insertCell(2);
-                        nameCell.innerHTML = '<a href="${rootURL}/computer/' + object.name + '" target="_blank">' + object.name + '</a>';
+                        nameCell.innerHTML = '<a href="${rootURL}/computer/' + object.name + '/" target="_blank">' + object.name + '</a>';
 
 
                         var labelsCell = newRow.insertCell(3);
