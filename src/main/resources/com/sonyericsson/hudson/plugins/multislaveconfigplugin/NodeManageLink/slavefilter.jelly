@@ -49,7 +49,9 @@
                 <j:if test="${it.isDeleteMode()}">
                     ${%Delete slaves}
                 </j:if>
-                <!--TODO: Add title for the launch mode -->
+                <j:if test="${it.isManageMode()}">
+                    ${%Manage slaves}
+                </j:if>
             </h3>
             <j:if test="${it.isConfigureMode()}">
                 Select which slaves to configure. Filter slaves by using the text boxes.
@@ -57,7 +59,9 @@
             <j:if test="${it.isDeleteMode()}">
                 Select which slaves to delete. Filter slaves by using the text boxes.
             </j:if>
-            <!--TODO: Add description for the launch mode -->
+            <j:if test="${it.isManageMode()}">
+                Select which slaves to manage. Filter slaves by using the text boxes.
+            </j:if>
 
             <form action="selectSlaves" method="post" name="viewerForm">
                 <table id="table">
@@ -139,7 +143,6 @@
                         <input type="submit" name="${%Submit}" value="Proceed" id="submit" />
                     </f:entry>
 
-                    <!--TODO: Maybe display a checkbox that the user can uncheck if he doesn't want to show a log for the launch-->
 
                 </table>
             </form>

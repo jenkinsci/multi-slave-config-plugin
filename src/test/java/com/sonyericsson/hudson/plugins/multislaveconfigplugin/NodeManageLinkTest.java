@@ -29,7 +29,6 @@ import antlr.ANTLRException;
 import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.Node;
-import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
@@ -331,15 +330,6 @@ public class NodeManageLinkTest {
     public void testGetSlaveNamesExistingNodeName() {
         when(hudsonMock.getNode("TestSlave")).thenReturn(dumbSlaveMock);
         names = nodeManageLink.getSlaveNames("TestSlave", "Slave", "1", "5");
-    }
-
-    /**
-     * Tests{@link NodeManageLink#isManagedWindowsServiceLauncher(hudson.slaves.ComputerLauncher)}.
-     * Testing that a ManagedWindowsServiceLauncher makes this method return true.
-     */
-    @Test
-    public void testIsManagedWindowsServiceLauncher() {
-        assertTrue(nodeManageLink.isManagedWindowsServiceLauncher(new ManagedWindowsServiceLauncher("", "")));
     }
 
     /**

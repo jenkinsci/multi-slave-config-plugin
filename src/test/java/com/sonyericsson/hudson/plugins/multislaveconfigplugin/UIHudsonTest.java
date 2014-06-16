@@ -25,6 +25,7 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
@@ -61,6 +62,7 @@ public class UIHudsonTest extends HudsonTestCase {
     static final String CONFIGURE = "Configure slaves";
     static final String DELETE = "Delete slaves";
     static final String ADD = "Add slaves";
+    static final String MANAGE = "Manage slaves";
 
     WebClient webClient;
     HtmlPage currentPage;
@@ -87,6 +89,88 @@ public class UIHudsonTest extends HudsonTestCase {
                 null, "label1", null, null, Collections.EMPTY_LIST);
         hudson.addNode(slave2);
         hudson.addNode(slave3);
+    }
+
+    /**
+     * Test for taking several nodes offline by using the UI.
+     * @throws Exception if so.
+     */
+    public void testTakeNodesOffline() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement offlineReason = currentPage.getElementById("offlineReason");
+        HtmlElement takeOffline = currentPage.getElementById("takeOffline");
+
+        offlineReason.setTextContent("Testing...");
+        takeOffline.fireEvent("click");
+
+        assertTrue(slave0.toComputer().isTemporarilyOffline());
+        assertTrue(slave1.toComputer().isTemporarilyOffline());
+    }
+
+    /**
+     * Test for taking several nodes online by using the UI.
+     * Online in this context means not temporarily offline.
+     * @throws Exception if so.
+     */
+    public void testBringNodesOnline() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        slave0.toComputer().setTemporarilyOffline(true);
+        slave1.toComputer().setTemporarilyOffline(true);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement takeOnline = currentPage.getElementById("takeOnline");
+
+        takeOnline.fireEvent("click");
+
+        assertFalse(slave0.toComputer().isTemporarilyOffline());
+        assertFalse(slave1.toComputer().isTemporarilyOffline());
+    }
+
+    /**
+     * Test for connecting to several nodes from the UI.
+     * @throws Exception if so.
+     */
+    public void testConnectToNodes() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement connect = currentPage.getElementById("connectSlaves");
+
+        connect.fireEvent("click");
+
+        assertNotNull(slave0.toComputer().getChannel());
+        assertNotNull(slave1.toComputer().getChannel());
+    }
+
+    /**
+     * Test for disconnecting several nodes from the UI.
+     * @throws Exception if so.
+     */
+    public void testDisconnectFromNodes() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement disconnect = currentPage.getElementById("disconnectSlaves");
+
+        disconnect.fireEvent("click");
+
+        assertNull(slave0.toComputer().getChannel());
+        assertNull(slave1.toComputer().getChannel());
     }
 
     /**

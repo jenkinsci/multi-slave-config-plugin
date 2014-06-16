@@ -4,6 +4,7 @@
             <l:task icon="images/24x24/up.png" href="${rootURL}/" title="${%Back to Dashboard}"/>
             <l:task icon="images/24x24/up.png" href="${rootURL}/${it.UrlName}" title="${%Plugin home}"/>
             <l:task icon="images/24x24/setting.png" href="configureRedirect" title="${%Configure slaves}"/>
+            <l:task icon="images/24x24/monitor.png" href="manageRedirect" title="${%Manage slaves}"/>
             <l:task icon="images/24x24/new-computer.png" href="addRedirect" title="${%Add slaves}"/>
             <l:task icon="images/24x24/edit-delete.png" href="deleteRedirect" title="${%Delete slaves}"/>
         </l:tasks>
