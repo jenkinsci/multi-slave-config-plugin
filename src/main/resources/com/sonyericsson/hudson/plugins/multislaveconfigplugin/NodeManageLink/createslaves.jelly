@@ -64,9 +64,9 @@
                     <input type="submit" name="Submit" value="Proceed" id="ok" style="margin-left:5em" />
                 </f:block>
             </f:form>
+            <script type="text/javascript">
+                var okButton = makeButton(document.getElementById('ok'),null);
+            </script>
         </l:main-panel>
-        <script type="text/javascript">
-            var okButton = makeButton(document.getElementById('ok'),null);
-        </script>
     </l:layout>
 </j:jelly>

@@ -141,13 +141,12 @@
 
                     <!--TODO: Maybe display a checkbox that the user can uncheck if he doesn't want to show a log for the launch-->
 
-                    <script type="text/javascript">
-                        var submitButton = makeButton(document.getElementById('submit'),null);
-                        updateTable();
-                    </script>
-
                 </table>
             </form>
+            <script type="text/javascript">
+                var submitButton = makeButton(document.getElementById('submit'),null);
+                updateTable();
+            </script>
         </l:main-panel>
     </l:layout>
 </j:jelly>

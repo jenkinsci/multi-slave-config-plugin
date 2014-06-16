@@ -50,11 +50,11 @@
                 </tr>
             </table>
             <br/><st:include page="slavelister.jelly"/>
+            <script type="text/javascript">
+                var yesDeleteButton = makeButton(document.getElementById('deleteSlavesInput'),deleteSlavesRedirect);
+                var noDeleteButton  = makeButton(document.getElementById('homeRedirectInput'),null);
+            </script>
         </l:main-panel>
-        <script type="text/javascript">
-            var yesDeleteButton = makeButton(document.getElementById('deleteSlavesInput'),deleteSlavesRedirect);
-            var noDeleteButton  = makeButton(document.getElementById('homeRedirectInput'),null);
-        </script>
     </l:layout>
 </j:jelly>
 
