@@ -18,7 +18,7 @@
         <license>
             <name>MIT</name>
             <url>http://www.opensource.org/licenses/mit-license.php</url>
-            <comments>Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.</comments>
+            <comments>Copyright (c) 2014 Sony Mobile Communications Inc. All rights reserved.</comments>
         </license>
     </licenses>
 
@@ -26,8 +26,8 @@
         <developer>
             <id>nilsi</id>
             <name>Nicklas Nilsson</name>
-            <email>nicklas3.nilsson@sonyericsson.com</email>
-            <organization>Sony Ericsson</organization>
+            <email>nicklas3.nilsson@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
             <url>http://www.linkedin.com/in/nicklasn</url>
             <roles>
                 <role>architect</role>
@@ -38,8 +38,8 @@
         <developer>
             <id>fredrikpersson</id>
             <name>Fredrik Persson</name>
-            <email>fredrik4.persson@sonyericsson.com</email>
-            <organization>Sony Ericsson</organization>
+            <email>fredrik6.persson@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
             <url>http://se.linkedin.com/in/fpersson</url>
             <roles>
                 <role>architect</role>
@@ -50,12 +50,23 @@
         <developer>
             <id>rsandell</id>
             <name>Robert Sandell</name>
-            <email>robert.sandell@sonyericsson.com</email>
-            <organization>Sony Ericsson</organization>
+            <email>robert.sandell@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
             <url>http://www.linkedin.com/in/robertsandell</url>
             <roles>
                 <role>architect</role>
                 <role>maintainer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
+        <developer>
+            <id>joakim_ahle</id>
+            <name>Joakim Ahle</name>
+            <email>joakim.ahle@sonymobile.com</email>
+            <organization>Sony Mobile Communications</organization>
+            <url>http://se.linkedin.com/in/joakimahle</url>
+            <roles>
+                <role>developer</role>
             </roles>
             <timezone>+1</timezone>
         </developer>
