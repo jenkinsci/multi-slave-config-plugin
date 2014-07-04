@@ -1,8 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
- *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -36,12 +35,14 @@ import hudson.model.Hudson;
 import hudson.model.ManagementLink;
 import hudson.model.Node;
 import hudson.model.User;
+import hudson.Functions;
 import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.security.Permission;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
+import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.OfflineCause;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
@@ -59,6 +60,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -797,7 +799,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
 
     /**
      * Disconnects from selected slaves.
-     * @param reason String.
+     * @param reason the reason for disconnecting
      * @param rsp StaplerResponse.
      * @param req StaplerRequest.
      * @return false if no nodes were selected, otherwise true
@@ -829,4 +831,74 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         return result;
     }
 
+    /**
+     * This is needed by settingsselector.jelly to list the Node properties the user can add or change.
+     * @return the {@link NodePropertyDescriptor} for {@link hudson.slaves.DumbSlave}
+     */
+    public List<NodePropertyDescriptor> getNodePropertyDescriptor() {
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        return descriptors;
+    }
+
+    /**
+     * This is needed by settingsselector.jelly to list the Node properties the user can remove.
+     * @return the {@link NodePropertyDescriptor} for {@link hudson.slaves.DumbSlave}
+     */
+    public List<RemovePropertyDescriptor> getRemovePropertyDescriptor() {
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        List<RemovePropertyDescriptor> removeProperyDescriptors = new LinkedList<RemovePropertyDescriptor>();
+        for (NodePropertyDescriptor descriptor : descriptors) {
+            removeProperyDescriptors.add(new RemovePropertyDescriptor(descriptor));
+        }
+
+        return removeProperyDescriptors;
+    }
+
+    /**
+     * Maps a class name to a real descriptor name. This is to have something readable to show the user when
+     * properties are removed.
+     * @param className the class name to match with a descriptor name.
+     * @return the readable name match
+     */
+    public String mapClassToDescriptorName(String className) {
+        String descriptorName = "";
+
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        for (NodePropertyDescriptor descriptor : descriptors) {
+            if (descriptor.getClass().getName().equals(className)) {
+                descriptorName = descriptor.getDisplayName();
+                break;
+            }
+        }
+
+        return descriptorName;
+    }
+
+    /**
+     * Descriptor to show in the removal list for node properties.
+     * The point is that it should only have a name that can be used to select properties to remove
+     * without showing the whole descriptor.
+     */
+    public static class RemovePropertyDescriptor extends Descriptor {
+
+        /**
+         * The real descriptor this instance is bound to.
+         */
+        private final Descriptor propertyDescriptor;
+
+        /**
+         * Default constructor. sends the class of the bounded propertyDescriptor to Descriptor base class
+         * which then sets it as clazz attribute for this class.
+         * @param propertyDescriptor the bounded ordinary descriptor of the node property
+         */
+        public RemovePropertyDescriptor(Descriptor propertyDescriptor) {
+            super(propertyDescriptor.getClass());
+            this.propertyDescriptor = propertyDescriptor;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return propertyDescriptor.getDisplayName();
+        }
+    }
 }

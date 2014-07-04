@@ -97,6 +97,30 @@
                         </j:if>
                     </j:forEach>
                 </u:dropdownList>
+                <f:section title="Node Properties" >
+                    <f:block>
+                        <br/>
+                        ${%Select node properties to change in the list below}.
+                        <f:hetero-list name="addOrChangeProperties"
+                                descriptors="${it.nodePropertyDescriptor}"
+                                hasHeader="true"
+                                addCaption="${%Node properties to change}"
+                                oneEach="true"/>
+                        <br/>
+                    </f:block>
+                    <j:if test="${it.configureMode}">
+                        <f:block>
+                            <br/>
+                            ${%Select node properties remove in the list below}.
+                            <f:hetero-list name="removeProperties"
+                                           descriptors="${it.removePropertyDescriptor}"
+                                           hasHeader="true"
+                                           addCaption="${%Node properties to remove}"
+                                           oneEach="true"/>
+                            <br/>
+                        </f:block>
+                    </j:if>
+                </f:section>
                 <!-- Clears a few textboxes if the settings on the affected slaves are different -->
                 <j:if test="${it.isSimpleScheduledRetentionStrategy(commonRetentionStrategy)}">
                     <j:if test="${nodeList.getCommon('UPTIME_MINS') == null}">
@@ -124,10 +148,14 @@
                         </script>
                     </j:if>
                 </j:if>
-                <table>
-                    <f:submit value="${%Save}"/>
-                </table>
-                <st:include page="slavelister.jelly"/>
+                <!-- To make a new section for the save button. It doesn't need a title though-->
+                <f:section title=" ">
+                    <f:block>
+                        <f:submit value="${%Save}"/>
+                        <br/>
+                        <st:include page="slavelister.jelly"/>
+                    </f:block>
+                </f:section>
             </f:form>
         </l:main-panel>
     </l:layout>

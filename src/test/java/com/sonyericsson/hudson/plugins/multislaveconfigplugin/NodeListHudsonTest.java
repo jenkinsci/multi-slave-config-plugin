@@ -1,7 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -31,13 +31,17 @@ import hudson.model.Slave;
 import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.JNLPLauncher;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
+import hudson.tools.ToolLocationNodeProperty;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.PretendSlave;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -259,6 +263,108 @@ public class NodeListHudsonTest extends HudsonTestCase {
 
         assertEquals(retentionStrategy, ((Slave)registeredNodes.get(0)).getRetentionStrategy());
         assertEquals(retentionStrategy, ((Slave)registeredNodes.get(1)).getRetentionStrategy());
+    }
+
+    /**
+     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Sets node properties for the selected slaves.
+     */
+    public void testAddOrChangeSettingsNodeProperties() {
+        NodeProperty<?> property = new EnvironmentVariablesNodeProperty();
+        List<NodeProperty<?>> list = new ArrayList<NodeProperty<?>>();
+        list.add(property);
+        settings.put("addOrChangeProperties", list);
+        changeSettingsHelper(settings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+
+        assertEquals(list, ((Slave)registeredNodes.get(0)).getNodeProperties());
+        assertEquals(list, ((Slave)registeredNodes.get(1)).getNodeProperties());
+
+    }
+
+    /**
+     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Removes node properties for the selected slaves.
+     * @throws Exception if Settings can't be removed
+     */
+    public void testRemoveSettingsNodeProperties() throws Exception {
+
+        NodeProperty<?> property = new EnvironmentVariablesNodeProperty();
+        List<NodeProperty<?>> list = new ArrayList<NodeProperty<?>>();
+        list.add(property);
+        settings.put("addOrChangeProperties", list);
+        changeSettingsHelper(settings);
+        settings.remove("addOrChangeProperties");
+
+        String className = EnvironmentVariablesNodeProperty.class.getName();
+        List<String> removeList = new ArrayList<String>();
+        removeList.add(className);
+
+        settings.put("removeProperties", removeList);
+
+        nodeList.changeSettings(settings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+
+        assertTrue(((Slave)registeredNodes.get(0)).getNodeProperties().toList().isEmpty());
+        assertTrue(((Slave)registeredNodes.get(1)).getNodeProperties().toList().isEmpty());
+    }
+
+    /**
+     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests that the Node properties are modified according to the desired precedence.
+     * Remove should remove only the current properties.
+     * Add should replace any current properties.
+     */
+    public void testPrecedenceOfNodeProperties() {
+        nodeList.add(dumbSlave1);
+        nodeList.add(dumbSlave2);
+
+        NodeProperty<?> toolLocationNodeProperty = new ToolLocationNodeProperty();
+        EnvironmentVariablesNodeProperty environmentVariablesNodeProperty =
+                new EnvironmentVariablesNodeProperty(new EnvironmentVariablesNodeProperty.Entry("key1", "value1"));
+
+        List<NodeProperty<?>> list = new ArrayList<NodeProperty<?>>();
+        list.add(environmentVariablesNodeProperty);
+        list.add(toolLocationNodeProperty);
+
+        settings.put("addOrChangeProperties", list);
+        nodeList.changeSettings(settings);
+        settings.remove("addOrChangeProperties");
+
+        // Remove the EnvironmentVariablesNodeProperty
+        String className = EnvironmentVariablesNodeProperty.DescriptorImpl.class.getName();
+        List<String> removeList = new ArrayList<String>();
+        removeList.add(className);
+
+        // New EnvironmentVariablesNodeProperty and ToolLocationNodeProperty
+        toolLocationNodeProperty = new ToolLocationNodeProperty();
+        environmentVariablesNodeProperty = new EnvironmentVariablesNodeProperty(
+                new EnvironmentVariablesNodeProperty.Entry("key2", "value2"));
+
+        list = new ArrayList<NodeProperty<?>>();
+        list.add(environmentVariablesNodeProperty);
+        list.add(toolLocationNodeProperty);
+
+        settings.put("addOrChangeProperties", list);
+        settings.put("removeProperties", removeList);
+
+        nodeList.changeSettings(settings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+
+        for (Node node : registeredNodes) {
+            List<NodeProperty<?>> nodePropertiesList = node.getNodeProperties().toList();
+            assertEquals(list, nodePropertiesList);
+            for (NodeProperty property : nodePropertiesList) {
+                if (property instanceof EnvironmentVariablesNodeProperty) {
+                    environmentVariablesNodeProperty = (EnvironmentVariablesNodeProperty)property;
+                    assertTrue(environmentVariablesNodeProperty.getEnvVars().containsKey("key2"));
+                    assertEquals("value2", environmentVariablesNodeProperty.getEnvVars().get("key2"));
+                }
+            }
+        }
     }
 
     /**

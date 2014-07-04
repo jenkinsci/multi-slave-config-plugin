@@ -24,19 +24,28 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.WebRequestSettings;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.nodes.JobRestrictionProperty;
+import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.restrictions.job.RegexNameRestriction;
 import hudson.model.Node;
+import hudson.model.Slave;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
+import org.apache.commons.httpclient.NameValuePair;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -111,6 +120,79 @@ public class UIHudsonTest extends HudsonTestCase {
         for (HtmlAnchor helpButton : (List<HtmlAnchor>)helpButtons) {
             helpButton.click();
         }
+    }
+
+    /**
+     * Test setting properties for a number of nodes.
+     * The tests mocks a form containing the desired changes.
+     * This was done since webclient's javascript support isn't good enough.
+     * @throws Exception on failure.
+     */
+    public void testSetNodeProperties() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+            webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": {\"env\": { \"key\": \"FOODPREF\",\"value\": "
+                + "\"BURGERS\"},\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty\",\"kind\": "
+                + "\"hudson.slaves.EnvironmentVariablesNodeProperty\"}}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+
+        webClient.getPage(requestSettings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+        List<NodeProperty<?>> list = ((Slave)registeredNodes.get(0)).getNodeProperties().toList();
+
+        EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty)list.get(0);
+        assertTrue(env.getEnvVars().containsKey("FOODPREF"));
+        assertTrue(env.getEnvVars().containsValue("BURGERS"));
+    }
+
+    /**
+     * This test tries to configure the job restrictions plugin with help from multislave.
+     * @throws Exception on failure.
+     */
+    public void testConfigureJobRestrictionsNodeProperty() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": { \"\": \"5\", \"jobRestriction\": "
+                + "{ \"stapler-class\": \"com.synopsys.arc.jenkinsci.plugins.jobrestrictions."
+                + "restrictions.job.RegexNameRestriction\", \"regexExpression\": \"testtest\", "
+                + "\"checkShortName\": false }, \"stapler-class\": \"com.synopsys.arc.jenkinsci."
+                + "plugins.jobrestrictions.nodes.JobRestrictionProperty\", \"kind\": \"com.synopsys.arc.jenkinsci."
+                + "plugins.jobrestrictions.nodes.JobRestrictionProperty\" }}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+
+        webClient.getPage(requestSettings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+        List<NodeProperty<?>> list = ((Slave)registeredNodes.get(0)).getNodeProperties().toList();
+
+        JobRestrictionProperty jobRestrictionProperty = (JobRestrictionProperty)list.get(0);
+        RegexNameRestriction restriction = (RegexNameRestriction)jobRestrictionProperty.getJobRestriction();
+        assertEquals(restriction.getRegexExpression(), "testtest");
+
     }
 
     /**
