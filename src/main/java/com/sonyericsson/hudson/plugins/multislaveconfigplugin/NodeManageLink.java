@@ -25,6 +25,7 @@
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
 import hudson.Extension;
+import hudson.Functions;
 import hudson.Util;
 import hudson.model.AutoCompletionCandidates;
 import hudson.model.Computer;
@@ -35,7 +36,6 @@ import hudson.model.Hudson;
 import hudson.model.ManagementLink;
 import hudson.model.Node;
 import hudson.model.User;
-import hudson.Functions;
 import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.security.Permission;
 import hudson.slaves.CommandLauncher;
@@ -65,9 +65,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.CONFIGURE;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.DELETE;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.MANAGE;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
@@ -835,7 +835,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * This is needed by settingsselector.jelly to list the Node properties the user can add or change.
      * @return the {@link NodePropertyDescriptor} for {@link hudson.slaves.DumbSlave}
      */
-    public List<NodePropertyDescriptor> getNodePropertyDescriptor() {
+    public List<NodePropertyDescriptor> getNodePropertyDescriptors() {
         List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
         return descriptors;
     }

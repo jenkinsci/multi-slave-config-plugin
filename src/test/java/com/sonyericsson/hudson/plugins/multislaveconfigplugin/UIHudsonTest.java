@@ -131,25 +131,7 @@ public class UIHudsonTest extends HudsonTestCase {
      * @throws Exception on failure.
      */
     public void testSetNodeProperties() throws Exception {
-        //Takes the web client to "search for slaves"-page.
-        clickLinkOnCurrentPage(CONFIGURE);
-
-        searchForAndSelectAllSlaves();
-
-        // Instead of requesting the page directly we create a WebRequestSettings object
-        WebRequestSettings requestSettings = new WebRequestSettings(
-            webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
-
-        // Then we set the request parameters
-        List<NameValuePair> params = new ArrayList<NameValuePair>();
-        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": {\"env\": { \"key\": \"FOODPREF\",\"value\": "
-                + "\"BURGERS\"},\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty\",\"kind\": "
-                + "\"hudson.slaves.EnvironmentVariablesNodeProperty\"}}"));
-        params.add(new NameValuePair("Submit", "Save"));
-
-        requestSettings.setRequestParameters(params);
-
-        webClient.getPage(requestSettings);
+        setUpNodeProperties();
 
         List<Node> registeredNodes = hudson.getNodes();
         List<NodeProperty<?>> list = registeredNodes.get(0).getNodeProperties().toList();
@@ -157,6 +139,25 @@ public class UIHudsonTest extends HudsonTestCase {
         EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty)list.get(0);
         assertTrue(env.getEnvVars().containsKey("FOODPREF"));
         assertTrue(env.getEnvVars().containsValue("BURGERS"));
+    }
+
+    /**
+     * Tests that the settings selector page is auto populated with common
+     * node properties.
+     * @throws Exception on failure.
+     */
+    public void testNodePropertiesAutoPopulation() throws Exception {
+        setUpNodeProperties();
+
+        currentPage = webClient.goTo(NodeManageLink.getInstance().getUrlName());
+
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        assertTrue("The settings page should contain BURGERS (common key)",
+                currentPage.asText().contains("BURGERS"));
     }
 
     /**
@@ -1054,6 +1055,32 @@ public class UIHudsonTest extends HudsonTestCase {
         if (change != AVAILABILITY) {
             assertFalse(pageAsText.contains("Availability"));
         }
+    }
+
+    /**
+     * Sets up a common {@link NodeProperty} for all slaves.
+     * @throws Exception if something goes wrong
+     */
+    private void setUpNodeProperties() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": {\"env\": { \"key\": \"FOODPREF\",\"value\": "
+                + "\"BURGERS\"},\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty\",\"kind\": "
+                + "\"hudson.slaves.EnvironmentVariablesNodeProperty\"}}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+
+        webClient.getPage(requestSettings);
     }
 
     /**

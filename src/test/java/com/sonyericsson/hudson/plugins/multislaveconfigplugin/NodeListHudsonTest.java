@@ -112,7 +112,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Makes sure that changing settings on a NodeList containing other than DumbSlaves
      * keeps the non-DumbSlaves untouched.
      * @throws Exception if creating a pretendSlave goes wrong.
@@ -136,7 +136,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Changes description.
      */
     public void testChangeSettingsDescription() {
@@ -148,7 +148,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Changes remote FS.
      */
     public void testChangeSettingsRemoteFS() {
@@ -160,7 +160,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Changes number of executors.
      */
     public void testChangeSettingsNumExecutors() {
@@ -172,7 +172,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Sets new labels.
      */
     public void testChangeSettingsSetLabels() {
@@ -185,7 +185,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Adds new labels, also makes sure that already existing labels are not being removed
      * and that slaves which already have the label doesn't get it twice.
      * @throws Descriptor.FormException if slave creation goes wrong.
@@ -204,7 +204,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Removes labels on slaves, also making sure that the plugin understands that the slaves
      * had different label strings before making the change.
      * @throws Descriptor.FormException if slave creation goes wrong.
@@ -224,7 +224,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Sets mode.
      */
     public void testChangeSettingsMode() {
@@ -237,7 +237,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Sets launcher.
      */
     public void testChangeSettingsLauncher() {
@@ -251,7 +251,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Sets RetentionStrategy.
      * @throws ANTLRException if creating RetentionStrategy goes wrong.
      */
@@ -266,53 +266,7 @@ public class NodeListHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
-     * Sets node properties for the selected slaves.
-     */
-    public void testAddOrChangeSettingsNodeProperties() {
-        NodeProperty<?> property = new EnvironmentVariablesNodeProperty();
-        List<NodeProperty<?>> list = new ArrayList<NodeProperty<?>>();
-        list.add(property);
-        settings.put("addOrChangeProperties", list);
-        changeSettingsHelper(settings);
-
-        List<Node> registeredNodes = hudson.getNodes();
-
-        assertEquals(list, ((Slave)registeredNodes.get(0)).getNodeProperties());
-        assertEquals(list, ((Slave)registeredNodes.get(1)).getNodeProperties());
-
-    }
-
-    /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
-     * Removes node properties for the selected slaves.
-     * @throws Exception if Settings can't be removed
-     */
-    public void testRemoveSettingsNodeProperties() throws Exception {
-
-        NodeProperty<?> property = new EnvironmentVariablesNodeProperty();
-        List<NodeProperty<?>> list = new ArrayList<NodeProperty<?>>();
-        list.add(property);
-        settings.put("addOrChangeProperties", list);
-        changeSettingsHelper(settings);
-        settings.remove("addOrChangeProperties");
-
-        String className = EnvironmentVariablesNodeProperty.class.getName();
-        List<String> removeList = new ArrayList<String>();
-        removeList.add(className);
-
-        settings.put("removeProperties", removeList);
-
-        nodeList.changeSettings(settings);
-
-        List<Node> registeredNodes = hudson.getNodes();
-
-        assertTrue(((Slave)registeredNodes.get(0)).getNodeProperties().toList().isEmpty());
-        assertTrue(((Slave)registeredNodes.get(1)).getNodeProperties().toList().isEmpty());
-    }
-
-    /**
-     * Tests {@link NodeList#changeSettings(java.util.HashMap)}.
+     * Tests {@link NodeList#changeSettings(java.util.Map)}.
      * Tests that the Node properties are modified according to the desired precedence.
      * Remove should remove only the current properties.
      * Add should replace any current properties.

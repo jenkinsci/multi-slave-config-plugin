@@ -195,9 +195,9 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.powermock.modules</groupId>
+            <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
-            <version>1.4.5</version>
+            <version>1.5.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -207,15 +207,15 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.powermock.api</groupId>
+            <groupId>org.powermock</groupId>
             <artifactId>powermock-api-mockito</artifactId>
-            <version>1.4.5</version>
+            <version>1.5.4</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.8.2</version>
+            <version>4.11</version>
             <scope>test</scope>
         </dependency>
         <dependency>

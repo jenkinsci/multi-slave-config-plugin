@@ -39,6 +39,7 @@ import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
 import hudson.util.DescribableList;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.Stapler;
@@ -51,18 +52,19 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IN_DEMAND_DELAY;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IDLE_DELAY;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.UPTIME_MINS;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.START_TIME_SPEC;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IN_DEMAND_DELAY;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.KEEP_UP_WHEN_ACTIVE;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.USERNAME;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.PASSWORD_STRING;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.LAUNCH_COMMAND;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.PASSWORD_STRING;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.START_TIME_SPEC;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.TUNNEL;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.UPTIME_MINS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.USERNAME;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.VM_ARGS;
 
 /**
@@ -199,7 +201,7 @@ public class NodeList extends ArrayList<Node> {
      * @param settings the settings to make as a hashmap
      * @return The changed list
      */
-    protected synchronized NodeList changeSettings(HashMap settings) {
+    protected synchronized NodeList changeSettings(Map settings) {
         //The nodes that are not in the newNodeList
         List<Node> complementaryNodes = getComplementaryNodes();
         List<Node> newNodeList = new ArrayList<Node>(complementaryNodes);
@@ -783,4 +785,43 @@ public class NodeList extends ArrayList<Node> {
         }
         return Messages.UnableToCompareRetentionStrategies();
     }
+
+
+    /**
+     * Gets a list of {@link hudson.slaves.NodeProperty}s that are common for all
+     * slaves in this list. NodeProperties that are not equal are left out.
+     * @return list of {@link hudson.slaves.NodeProperty}s
+     */
+    public List<NodeProperty> getNodeProperties() {
+        if (isEmpty()) {
+            throw new Failure(Messages.EmptyNodeList());
+        }
+        List<NodeProperty> commonProperties = new LinkedList<NodeProperty>();
+        Node firstSlave = getFirstSlave();
+
+        for (NodeProperty property : firstSlave.getNodeProperties()) {
+            if (property != null) {
+                NodePropertyDescriptor propertyDescriptor = property.getDescriptor();
+
+                String firstPropertyString = Jenkins.XSTREAM2.toXML(property);
+                if (firstPropertyString != null) {
+                    boolean allHadSame = true;
+
+                    for (Node otherNode : this) {
+                        NodeProperty otherProperty = otherNode.getNodeProperties().get(propertyDescriptor);
+                        String otherPropertyString = Jenkins.XSTREAM2.toXML(otherProperty);
+                        if (!firstPropertyString.equals(otherPropertyString)) {
+                            allHadSame = false;
+                            break;
+                        }
+                    }
+                    if (allHadSame) {
+                        commonProperties.add(property);
+                    }
+                }
+            }
+        }
+        return commonProperties;
+    }
+
 }

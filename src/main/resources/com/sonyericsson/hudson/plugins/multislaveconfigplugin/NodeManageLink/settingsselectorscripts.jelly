@@ -1,0 +1,14 @@
+<j:jelly xmlns:j="jelly:core">
+    <script type="text/javascript">
+
+        //Populates map of display names for NodeProperty classes.
+        var classToDisplayName = new Object();
+        <j:forEach var="d" items="${it.nodePropertyDescriptors}">
+            classToDisplayName["${d.clazz.getName()}"] = "${d.getDisplayName()}";
+        </j:forEach>
+
+    </script>
+
+    <script src="${resURL}/plugin/${it.urlName}/scripts/settingsselectorscripts.js" type="text/javascript"></script>
+
+</j:jelly>

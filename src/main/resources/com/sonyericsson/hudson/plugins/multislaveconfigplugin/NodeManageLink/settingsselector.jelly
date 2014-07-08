@@ -5,6 +5,7 @@
         <st:include page="sidepanel.jelly"/>
         <l:header>
             <st:include page="javascript.jelly"/>
+            <st:include page="settingsselectorscripts.jelly"/>
             <style type="text/css">
                 .setting-description{
                 padding-bottom:10px;
@@ -101,8 +102,10 @@
                     <f:block>
                         <br/>
                         ${%Select node properties to change in the list below}.
+                        ${%Properties that are common for all selected slaves are populated automatically}.
                         <f:hetero-list name="addOrChangeProperties"
-                                descriptors="${it.nodePropertyDescriptor}"
+                                items="${nodeList.getNodeProperties()}"
+                                descriptors="${it.nodePropertyDescriptors}"
                                 hasHeader="true"
                                 addCaption="${%Node properties to change}"
                                 oneEach="true"/>
