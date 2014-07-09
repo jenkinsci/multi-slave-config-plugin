@@ -1,8 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
- *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +24,7 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
@@ -38,6 +38,7 @@ import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.List;
 
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.SET_LABELS;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOVE_LABELS;
@@ -89,6 +90,27 @@ public class UIHudsonTest extends HudsonTestCase {
                 null, "label1", null, null, Collections.EMPTY_LIST);
         hudson.addNode(slave2);
         hudson.addNode(slave3);
+    }
+
+    /**
+     * Testing the help links on the various pages affected by multislave.
+     * @throws Exception if so.
+     */
+    public void testAllHelpLinksFound() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        List<?> helpButtons = currentPage.selectNodes("//a[@class='help-button']");
+        assertNotNull(helpButtons);
+        assertFalse(helpButtons.isEmpty());
+
+        // The click() results in an Ajax call. If it fails, the test will fail
+        for (HtmlAnchor helpButton : (List<HtmlAnchor>)helpButtons) {
+            helpButton.click();
+        }
     }
 
     /**

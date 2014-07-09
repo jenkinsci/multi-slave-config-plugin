@@ -37,18 +37,18 @@
                     <f:textbox clazz="positive-number" name="numExecutors" id="numExecutors" disabled="true" value="${nodeList.getCommon('NUM_EXECUTORS')}"/>
                 </u:entry>
                 <u:entry title="${%Remote FS root}" checkboxId="_remoteFS"
-                         help="${rootURL}/plugin/${it.getUrlName()}/help-RemoteFS.html"
+                         help="/plugin/${it.getUrlName()}/help-RemoteFS.html"
                          description="${nodeList.getCommon('REMOTE_FS')==null ? '%DifferentRemoteFS' : ''}">
                     <f:textbox name="remoteFS" id="remoteFS" disabled="true" value="${nodeList.getCommon('REMOTE_FS')}"/>
                 </u:entry>
-                <u:entry title="${%Set labels}" checkboxId="_labelString" help="${rootURL}/plugin/${it.getUrlName()}/help-SetLabels.html"
+                <u:entry title="${%Set labels}" checkboxId="_labelString" help="/plugin/${it.getUrlName()}/help-SetLabels.html"
                          description="${nodeList.getCommon('LABELS')==null ? '%DifferentLabels' : ''}">
                     <f:textbox name="labelString" id="labelString" disabled="true" value="${nodeList.getCommon('LABELS')}"/>
                 </u:entry>
-                <u:entry title="${%Add labels}" checkboxId="_addLabelString" help="${rootURL}/plugin/${it.getUrlName()}/help-AddLabels.html">
+                <u:entry title="${%Add labels}" checkboxId="_addLabelString" help="/plugin/${it.getUrlName()}/help-AddLabels.html">
                     <f:textbox name="addLabelString" id="addLabelString" disabled="true"/>
                 </u:entry>
-                <u:entry title="${%Remove labels}" checkboxId="_removeLabelString" help="${rootURL}/plugin/${it.getUrlName()}/help-RemoveLabels.html">
+                <u:entry title="${%Remove labels}" checkboxId="_removeLabelString" help="/plugin/${it.getUrlName()}/help-RemoveLabels.html">
                     <f:textbox name="removeLabelString" id="removeLabelString" disabled="true"/>
                 </u:entry>
                 <u:entry title="${%Usage mode}" name="mode" checkboxId="_mode" help="/help/system-config/master-slave/usage.html"
@@ -61,7 +61,7 @@
                 </u:entry>
                 <j:set var="commonLauncher" value="${nodeList.getLauncher()}"/>
                 <u:dropdownList name="slave.launcher" title="${%Launch method}" entry="_launcher" checkboxId="_launcherId"
-                                help="${rootURL}/plugin/${it.getUrlName()}/help-Launcher.html" id="launcherId"
+                                help="/plugin/${it.getUrlName()}/help-Launcher.html" id="launcherId"
                                 description="${nodeList.getLauncherDescription()}">
                     <j:forEach var="d" items="${h.getComputerLauncherDescriptors()}">
                         <f:dropdownListBlock value="${d.clazz.name}" name="${d.displayName}"
