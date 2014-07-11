@@ -1,6 +1,6 @@
  The MIT License
 
- Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ Copyright 2011,2014 Sony Mobile Communications Inc. All rights reserved.
 
  Permission is hereby granted, free of charge, to any person obtaining a copy
  of this software and associated documentation files (the "Software"), to deal
@@ -26,7 +26,7 @@ This plugin allows administrators to configure,
 add and delete several dumb slaves at the same time.
 
 
-Jenkins 1.404 or later and Javascript activated is required.
+Javascript activated is required.
 
 =============
 
