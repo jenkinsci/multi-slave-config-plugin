@@ -25,8 +25,8 @@
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
 import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.WebRequestSettings;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
@@ -42,6 +42,7 @@ import hudson.slaves.EnvironmentVariablesNodeProperty;
 import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.lang.RandomStringUtils;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.IOException;
@@ -49,16 +50,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.SET_LABELS;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOVE_LABELS;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.ADD_LABELS;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.USAGE_MODE;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.NBR_OF_EXECUTORS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.AVAILABILITY;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.DESCRIPTION;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.LAUNCH_METHOD;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.NBR_OF_EXECUTORS;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOTE_FS;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.AVAILABILITY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOVE_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.SET_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.USAGE_MODE;
 import static hudson.model.Node.Mode.EXCLUSIVE;
+import static hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 
 //CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: Tests.
 
@@ -125,7 +127,7 @@ public class UIHudsonTest extends HudsonTestCase {
     /**
      * Test setting properties for a number of nodes.
      * The tests mocks a form containing the desired changes.
-     * This was done since webclient's javascript support isn't good enough.
+     * This was done since HTMLUNIT's javascript support isn't good enough.
      * @throws Exception on failure.
      */
     public void testSetNodeProperties() throws Exception {
@@ -150,11 +152,49 @@ public class UIHudsonTest extends HudsonTestCase {
         webClient.getPage(requestSettings);
 
         List<Node> registeredNodes = hudson.getNodes();
-        List<NodeProperty<?>> list = ((Slave)registeredNodes.get(0)).getNodeProperties().toList();
+        List<NodeProperty<?>> list = registeredNodes.get(0).getNodeProperties().toList();
 
         EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty)list.get(0);
         assertTrue(env.getEnvVars().containsKey("FOODPREF"));
         assertTrue(env.getEnvVars().containsValue("BURGERS"));
+    }
+
+    /**
+     * Test removing properties for a number of nodes.
+     * The tests mocks a form containing the desired changes.
+     * This was done since HTMLUNIT's javascript support isn't good enough.
+     * @throws Exception on failure.
+     */
+    public void testRemoveNodeProperties() throws Exception {
+        //First make sure the nodes have some random properties:
+        for (Node node : jenkins.getNodes()) {
+            Entry entry = new Entry(
+                    RandomStringUtils.random(5), RandomStringUtils.random(5));
+            node.getNodeProperties().add(new EnvironmentVariablesNodeProperty(entry));
+        }
+
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"removeProperties\": "
+                + "{\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty$DescriptorImpl\",\"kind\": "
+                + "\"hudson.slaves.EnvironmentVariablesNodeProperty$DescriptorImpl\"}}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+        webClient.getPage(requestSettings);
+
+        for (Node node : jenkins.getNodes()) {
+            assertTrue("Slave should not have any node properties", node.getNodeProperties().isEmpty());
+        }
     }
 
     /**
