@@ -69,6 +69,18 @@
                         <td><st:include page="retentionstrategy.jelly"/> <br/></td>
                     </tr>
                 </j:if>
+                <j:if test="${lastChangedSettings.get('addOrChangeProperties') != null}">
+                    <tr>
+                        <td><b>${%Properties added}: </b></td>
+                        <td><st:include page="addedproperties.groovy"/> <br/></td>
+                    </tr>
+                </j:if>
+                <j:if test="${lastChangedSettings.get('removeProperties') != null}">
+                    <tr>
+                        <td><b>${%Properties removed}: </b></td>
+                        <td><st:include page="removedproperties.groovy"/> <br/></td>
+                    </tr>
+                </j:if>
             </table>
             <br/><br/>
             <st:include page="slavelister.jelly"/>

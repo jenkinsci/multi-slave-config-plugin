@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -31,8 +32,13 @@ import org.junit.runner.RunWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.EnvironmentVariables.*;
-import static org.junit.Assert.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.EnvironmentVariables.toVariables;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.EnvironmentVariables.fromVariables;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.EnvironmentVariables.containsEnvironmentVariables;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 

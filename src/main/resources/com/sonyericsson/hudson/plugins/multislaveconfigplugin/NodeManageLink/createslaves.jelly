@@ -19,11 +19,11 @@
             <h3>${it.displayName} - ${%Add slaves}</h3>
             <f:form method="post" action="createSlaves" name="createSlavesForm">
                 <f:description>Create slaves by names separated with space: </f:description>
-                <f:entry help="${rootURL}/plugin/${it.getUrlName()}/help-AddSlaves.html">
+                <f:entry help="/plugin/${it.getUrlName()}/help-AddSlaves.html">
                     <f:textbox id="slaveNames" name="slaveNames" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
                 </f:entry>
                 <f:description>Create slaves by name and number span:</f:description>
-                <f:entry help="${rootURL}/plugin/${it.getUrlName()}/help-AddSlavesBySpan.html">
+                <f:entry help="/plugin/${it.getUrlName()}/help-AddSlavesBySpan.html">
                     ${%Slave name}:
                     <f:textbox id="slaveName" name="slaveName" value="" onchange="updateOk(this.form)" onkeyup="updateOk(this.form)"/>
                     ${%from}:
@@ -64,9 +64,9 @@
                     <input type="submit" name="Submit" value="Proceed" id="ok" style="margin-left:5em" />
                 </f:block>
             </f:form>
+            <script type="text/javascript">
+                var okButton = makeButton(document.getElementById('ok'),null);
+            </script>
         </l:main-panel>
-        <script type="text/javascript">
-            var okButton = makeButton(document.getElementById('ok'),null);
-        </script>
     </l:layout>
 </j:jelly>

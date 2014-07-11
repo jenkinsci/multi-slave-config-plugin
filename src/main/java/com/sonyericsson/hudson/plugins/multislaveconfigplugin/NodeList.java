@@ -1,7 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -34,8 +34,12 @@ import hudson.slaves.CommandLauncher;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
+import hudson.slaves.NodeProperty;
+import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
+import hudson.util.DescribableList;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.Stapler;
@@ -46,11 +50,22 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IDLE_DELAY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.IN_DEMAND_DELAY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.KEEP_UP_WHEN_ACTIVE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.LAUNCH_COMMAND;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.PASSWORD_STRING;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.START_TIME_SPEC;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.TUNNEL;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.UPTIME_MINS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.USERNAME;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.Setting.VM_ARGS;
 
 /**
  * Manages a list of nodes.
@@ -186,7 +201,7 @@ public class NodeList extends ArrayList<Node> {
      * @param settings the settings to make as a hashmap
      * @return The changed list
      */
-    protected synchronized NodeList changeSettings(HashMap settings) {
+    protected synchronized NodeList changeSettings(Map settings) {
         //The nodes that are not in the newNodeList
         List<Node> complementaryNodes = getComplementaryNodes();
         List<Node> newNodeList = new ArrayList<Node>(complementaryNodes);
@@ -201,6 +216,8 @@ public class NodeList extends ArrayList<Node> {
             Node.Mode newMode = (Node.Mode)settings.get("mode");
             ComputerLauncher newLauncher = (ComputerLauncher)settings.get("launcher");
             RetentionStrategy newRetentionStrategy = (RetentionStrategy)settings.get("retentionStrategy");
+            List<NodeProperty<?>> newProperties = (List<NodeProperty<?>>)settings.get("addOrChangeProperties");
+            List<String> removeProperties = (List<String>)settings.get("removeProperties");
 
             if (node instanceof DumbSlave) {
                 DumbSlave slave = (DumbSlave)node;
@@ -227,6 +244,10 @@ public class NodeList extends ArrayList<Node> {
                     newRetentionStrategy = slave.getRetentionStrategy();
                 }
 
+                DescribableList<NodeProperty<?>, NodePropertyDescriptor> describableList = slave.getNodeProperties();
+                List<NodeProperty<?>> oldProperties = describableList.toList();
+                newProperties = getNewProperties(newProperties, oldProperties, removeProperties);
+
                 newLabelsToAdd = EnvironmentVariables.fromVariables(slave, newLabelsToAdd);
                 newLabelsToRemove = EnvironmentVariables.fromVariables(slave, newLabelsToRemove);
                 newSetLabels = addLabels(newLabelsToAdd, newSetLabels);
@@ -236,8 +257,7 @@ public class NodeList extends ArrayList<Node> {
 
                 try {
                     changedSlave = new DumbSlave(slave.getNodeName(), newDescription, newRemoteFS, newNumExecutors,
-                            newMode, newSetLabels, newLauncher, newRetentionStrategy,
-                            slave.getNodeProperties().toList());
+                            newMode, newSetLabels, newLauncher, newRetentionStrategy, newProperties);
                 } catch (Descriptor.FormException e) {
                     logger.log(Level.WARNING, "Failed to edit slave " + slave.getNodeName()
                             + " cause: " + e.getMessage());
@@ -267,6 +287,49 @@ public class NodeList extends ArrayList<Node> {
         }
         newNodeList.removeAll(complementaryNodes);
         return new NodeList(newNodeList);
+    }
+
+    /**
+     * The precedence of the operations are: Old, remove, new.
+     * Remove will only affect current properties, new will replace old properties with new.
+     * @param newProperties the properties to add to the slave
+     * @param oldProperties the properties the slave currently has
+     * @param removeProperties the properties to remove from the slave
+     * @return a property list matching the precedence.
+     */
+    private List<NodeProperty<?>> getNewProperties(List<NodeProperty<?>> newProperties,
+                                                   List<NodeProperty<?>> oldProperties,
+                                                   List<String> removeProperties) {
+        List<NodeProperty<?>> ret = new LinkedList<NodeProperty<?>>();
+        if (oldProperties != null) {
+            ret.addAll(oldProperties);
+        }
+
+        if (removeProperties != null) {
+            for (String propertyToRemove : removeProperties) {
+                for (NodeProperty<?> property : ret) {
+                    if (property.getDescriptor().getClass().getName().equals(propertyToRemove)) {
+                        ret.remove(property);
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (newProperties != null) {
+            for (NodeProperty<?> newProperty : newProperties) {
+                for (NodeProperty<?> property : ret) {
+                    if (property.getClass() == newProperty.getClass()) {
+                        ret.remove(property);
+                        break;
+                    }
+                }
+
+                ret.add(newProperty);
+            }
+        }
+
+        return ret;
     }
 
     /**
@@ -364,16 +427,16 @@ public class NodeList extends ArrayList<Node> {
     protected static HashMap interpretJSON(JSONObject json) {
         HashMap<String, Object> hashMap = new HashMap<String, Object>();
         // prefix "_" represents the checkbox for the given option
-        if ((Boolean)json.get("_description")) {
+        if (json.has("_description") && (Boolean)json.get("_description")) {
             hashMap.put("description", json.get("description"));
         }
-        if ((Boolean)json.get("_remoteFS")) {
+        if (json.has("_remoteFS") && (Boolean)json.get("_remoteFS")) {
             hashMap.put("remoteFS", json.get("remoteFS"));
         }
-        if ((Boolean)json.get("_numExecutors")) {
+        if (json.has("_numExecutors") && (Boolean)json.get("_numExecutors")) {
             hashMap.put("numExecutors", json.get("numExecutors"));
         }
-        if ((Boolean)json.get("_mode")) {
+        if (json.has("_mode") && (Boolean)json.get("_mode")) {
             String modeS = (String)json.get("mode");
             if (modeS.equals("NORMAL")) {
                 hashMap.put("mode", Node.Mode.NORMAL);
@@ -383,24 +446,87 @@ public class NodeList extends ArrayList<Node> {
                 throw new Failure(Messages.UndefinedMode());
             }
         }
-        if ((Boolean)json.get("_labelString")) {
+        if (json.has("_labelString") && (Boolean)json.get("_labelString")) {
             hashMap.put("setLabelString", json.get("labelString"));
         }
-        if ((Boolean)json.get("_addLabelString")) {
+        if (json.has("_addLabelString") && (Boolean)json.get("_addLabelString")) {
             hashMap.put("addLabelString", json.get("addLabelString"));
         }
-        if ((Boolean)json.get("_removeLabelString")) {
+        if (json.has("_removeLabelString") && (Boolean)json.get("_removeLabelString")) {
             hashMap.put("removeLabelString", json.get("removeLabelString"));
         }
-        if ((Boolean)json.get("_launcher")) {
+        if (json.has("_launcher") && (Boolean)json.get("_launcher")) {
             hashMap.put("launcher", Stapler.getCurrentRequest().bindJSON(ComputerLauncher.class,
                     (JSONObject)json.get("launcher")));
         }
-        if ((Boolean)json.get("_retentionStrategy")) {
+        if (json.has("_retentionStrategy") && (Boolean)json.get("_retentionStrategy")) {
             hashMap.put("retentionStrategy", Stapler.getCurrentRequest().bindJSON(RetentionStrategy.class,
                     (JSONObject)json.get("retentionStrategy")));
         }
+
+        if (json.has("addOrChangeProperties")) {
+            List<NodeProperty<?>> addOrChangeProperties = extractAddOrChangeProperties(
+                    json.get("addOrChangeProperties"));
+            if (!addOrChangeProperties.isEmpty()) {
+                hashMap.put("addOrChangeProperties", addOrChangeProperties);
+            }
+        }
+
+        if (json.has("removeProperties")) {
+            List<String> removeProperties = extractRemoveProperties(json.get("removeProperties"));
+            if (!removeProperties.isEmpty()) {
+                hashMap.put("removeProperties", removeProperties);
+            }
+        }
+
         return hashMap;
+    }
+
+    /**
+     * Fetches the properties that were added or changed by the user.
+     * @param addOrChangeProperties the JSON data submitted with the form
+     * @return the list of Node Properties that were added or changed
+     */
+    private static List<NodeProperty<?>> extractAddOrChangeProperties(Object addOrChangeProperties) {
+        List<NodeProperty<?>> ret = new ArrayList<NodeProperty<?>>();
+        JSONArray array = new JSONArray();
+
+        if (addOrChangeProperties instanceof JSONArray) { // Several Properties selected by the user
+            array = (JSONArray)addOrChangeProperties;
+        } else if (addOrChangeProperties instanceof JSONObject) { // Exactly one property selected by the user
+            array.add(addOrChangeProperties);
+        }
+
+        for (Object elem : array) {
+            NodeProperty<?> property = Stapler.getCurrentRequest().bindJSON(NodeProperty.class, (JSONObject)elem);
+            ret.add(property);
+        }
+
+        return ret;
+
+    }
+
+    /**
+     * Fetches the properties that were removed by the user.
+     * @param removeProperties the JSON data submitted with the form
+     * @return the list of Node Properties that were removed
+     */
+    private static List<String> extractRemoveProperties(Object removeProperties) {
+        List<String> ret = new ArrayList<String>();
+        JSONArray array = new JSONArray();
+
+        if (removeProperties instanceof JSONArray) { // Several Properties selected by the user
+            array = (JSONArray)removeProperties;
+        } else if (removeProperties instanceof JSONObject) { // Exactly one property selected by the user
+            array.add(removeProperties);
+        }
+
+        for (Object elem : array) {
+            String className = ((JSONObject)elem).getString("kind");
+            ret.add(className);
+        }
+
+        return ret;
     }
 
     /**
@@ -659,4 +785,43 @@ public class NodeList extends ArrayList<Node> {
         }
         return Messages.UnableToCompareRetentionStrategies();
     }
+
+
+    /**
+     * Gets a list of {@link hudson.slaves.NodeProperty}s that are common for all
+     * slaves in this list. NodeProperties that are not equal are left out.
+     * @return list of {@link hudson.slaves.NodeProperty}s
+     */
+    public List<NodeProperty> getNodeProperties() {
+        if (isEmpty()) {
+            throw new Failure(Messages.EmptyNodeList());
+        }
+        List<NodeProperty> commonProperties = new LinkedList<NodeProperty>();
+        Node firstSlave = getFirstSlave();
+
+        for (NodeProperty property : firstSlave.getNodeProperties()) {
+            if (property != null) {
+                NodePropertyDescriptor propertyDescriptor = property.getDescriptor();
+
+                String firstPropertyString = Jenkins.XSTREAM2.toXML(property);
+                if (firstPropertyString != null) {
+                    boolean allHadSame = true;
+
+                    for (Node otherNode : this) {
+                        NodeProperty otherProperty = otherNode.getNodeProperties().get(propertyDescriptor);
+                        String otherPropertyString = Jenkins.XSTREAM2.toXML(otherProperty);
+                        if (!firstPropertyString.equals(otherPropertyString)) {
+                            allHadSame = false;
+                            break;
+                        }
+                    }
+                    if (allHadSame) {
+                        commonProperties.add(property);
+                    }
+                }
+            }
+        }
+        return commonProperties;
+    }
+
 }

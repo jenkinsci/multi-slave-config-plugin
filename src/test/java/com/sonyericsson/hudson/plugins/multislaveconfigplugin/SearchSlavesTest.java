@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -36,10 +37,16 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 /**
  * Tests the {@link NodeManageLink} using JUnit Tests.
@@ -145,6 +152,31 @@ public class SearchSlavesTest {
         NodeList result = SearchSlaves.getNodes(searchParameters);
         assertTrue(result.contains(dumbSlave));
         assertEquals(1, result.size());
+    }
+
+    /**
+     * Tests {@link SearchSlaves#getNodes(net.sf.json.JSONObject)}.
+     * Searching for DumbSlaves by full names separated by space.
+     */
+    @Test
+    public void testGetNodesByFullNames() {
+        DumbSlave dumbSlave2 = PowerMockito.mock(DumbSlave.class);
+        when(dumbSlave2.getNodeName()).thenReturn("slave2");
+        DumbSlave dumbSlave3 = PowerMockito.mock(DumbSlave.class);
+        when(dumbSlave3.getNodeName()).thenReturn("slave3");
+
+        List<Node> nodeList = new ArrayList<Node>();
+        nodeList.add(dumbSlave);
+        nodeList.add(dumbSlave2);
+        nodeList.add(dumbSlave3);
+
+        when(hudsonMock.getNodes()).thenReturn(nodeList);
+
+        searchParameters.put("fullNames", "slave  slave2");
+        NodeList result = SearchSlaves.getNodes(searchParameters);
+        assertTrue(result.contains(dumbSlave));
+        assertTrue(result.contains(dumbSlave2));
+        assertEquals(2, result.size());
     }
 
     /**

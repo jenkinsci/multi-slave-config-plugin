@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -28,7 +29,6 @@ import antlr.ANTLRException;
 import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.Node;
-import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
@@ -53,9 +53,16 @@ import java.util.HashSet;
 
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.ICON;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.URL;
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.*;
-import static org.junit.Assert.*;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.CONFIGURE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.DELETE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 /**
  * Tests the {@link NodeManageLink} using JUnit Tests.
  * @author Nicklas Nilsson &lt;nicklas3.nilsson@sonyericsson.com&gt;
@@ -323,15 +330,6 @@ public class NodeManageLinkTest {
     public void testGetSlaveNamesExistingNodeName() {
         when(hudsonMock.getNode("TestSlave")).thenReturn(dumbSlaveMock);
         names = nodeManageLink.getSlaveNames("TestSlave", "Slave", "1", "5");
-    }
-
-    /**
-     * Tests{@link NodeManageLink#isManagedWindowsServiceLauncher(hudson.slaves.ComputerLauncher)}.
-     * Testing that a ManagedWindowsServiceLauncher makes this method return true.
-     */
-    @Test
-    public void testIsManagedWindowsServiceLauncher() {
-        assertTrue(nodeManageLink.isManagedWindowsServiceLauncher(new ManagedWindowsServiceLauncher("", "")));
     }
 
     /**

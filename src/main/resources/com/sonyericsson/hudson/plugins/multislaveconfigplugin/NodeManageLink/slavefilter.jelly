@@ -1,3 +1,28 @@
+<!--
+ *  The MIT License
+ *
+ *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
+ *
+ *  Permission is hereby granted, free of charge, to any person obtaining a copy
+ *  of this software and associated documentation files (the "Software"), to deal
+ *  in the Software without restriction, including without limitation the rights
+ *  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ *  copies of the Software, and to permit persons to whom the Software is
+ *  furnished to do so, subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be included in
+ *  all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ *  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ *  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ *  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ *  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ *  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ *  THE SOFTWARE.
+ *
+ -->
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
     <j:set var="sessionId" value="${request.session.getId()}"/>
 
@@ -12,6 +37,7 @@
             <style type="text/css">
                 #labels, #description, #name, #remoteFS { width: 200px;}
                 #executors {width:60px;}
+                #fullNames {width:413px;}
             </style>
         </l:header>
 
@@ -23,7 +49,9 @@
                 <j:if test="${it.isDeleteMode()}">
                     ${%Delete slaves}
                 </j:if>
-                <!--TODO: Add title for the launch mode -->
+                <j:if test="${it.isManageMode()}">
+                    ${%Manage slaves}
+                </j:if>
             </h3>
             <j:if test="${it.isConfigureMode()}">
                 Select which slaves to configure. Filter slaves by using the text boxes.
@@ -31,7 +59,9 @@
             <j:if test="${it.isDeleteMode()}">
                 Select which slaves to delete. Filter slaves by using the text boxes.
             </j:if>
-            <!--TODO: Add description for the launch mode -->
+            <j:if test="${it.isManageMode()}">
+                Select which slaves to manage. Filter slaves by using the text boxes.
+            </j:if>
 
             <form action="selectSlaves" method="post" name="viewerForm">
                 <table id="table">
@@ -68,6 +98,18 @@
                             <st:nbsp/><st:nbsp/><f:textbox name="description" id="description" onchange="updateTable()" onkeyup="updateTable()"/>
                         </td>
                     </tr>
+                </table>
+                <table>
+                    <tr>
+                        <td>
+                            ${%Full names separated by space}:
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <st:nbsp/><st:nbsp/><f:textbox  id="fullNames" onchange="updateTable()" onkeyup="updateTable()"/>
+                        </td>
+                    </tr>
                     <tr>
                         <td>
                             <st:nbsp/>${%# of executors}:
@@ -101,15 +143,13 @@
                         <input type="submit" name="${%Submit}" value="Proceed" id="submit" />
                     </f:entry>
 
-                    <!--TODO: Maybe display a checkbox that the user can uncheck if he doesn't want to show a log for the launch-->
-
-                    <script type="text/javascript">
-                        var submitButton = makeButton(document.getElementById('submit'),null);
-                        updateTable();
-                    </script>
 
                 </table>
             </form>
+            <script type="text/javascript">
+                var submitButton = makeButton(document.getElementById('submit'),null);
+                updateTable();
+            </script>
         </l:main-panel>
     </l:layout>
 </j:jelly>

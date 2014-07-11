@@ -1,7 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -25,20 +25,25 @@
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
 import hudson.Extension;
+import hudson.Functions;
 import hudson.Util;
 import hudson.model.AutoCompletionCandidates;
+import hudson.model.Computer;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
 import hudson.model.Failure;
 import hudson.model.Hudson;
 import hudson.model.ManagementLink;
 import hudson.model.Node;
+import hudson.model.User;
 import hudson.os.windows.ManagedWindowsServiceLauncher;
 import hudson.security.Permission;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.ComputerLauncher;
 import hudson.slaves.DumbSlave;
 import hudson.slaves.JNLPLauncher;
+import hudson.slaves.NodePropertyDescriptor;
+import hudson.slaves.OfflineCause;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
 import net.sf.json.JSONArray;
@@ -55,11 +60,15 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.CONFIGURE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.DELETE;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.MANAGE;
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 
 /**
@@ -141,9 +150,11 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         /**
          * Usermode when deleting slaves.
          */
-        DELETE
-
-        //TODO: Add launch slaves mode
+        DELETE,
+        /**
+         * Usermode when changing online and connected statuses of slaves.
+         */
+        MANAGE
     }
 
     /**
@@ -300,7 +311,15 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         return userMode.get(currentSessionId) == ADD;
     }
 
-    //TODO add isLaunchMode()
+    /**
+     * Checks if current used mode was UserMode Manage.
+     * @return true/false if last used mode was UserMode Manage.
+     */
+    public boolean isManageMode() {
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
+        return userMode.get(currentSessionId) == MANAGE;
+    }
+
 
     /**
      * Gets all Jenkins registered nodes. Used for the jelly scripts
@@ -331,6 +350,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      */
     public void doConfigureRedirect(StaplerRequest req, StaplerResponse rsp) throws IOException {
         Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
         app.checkPermission(getRequiredPermission());
         userMode.put(req.getSession().getId(), CONFIGURE);
         if (app.getNodes().isEmpty()) {
@@ -346,10 +366,30 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @throws IOException if redirection goes wrong
      */
     public void doAddRedirect(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
         userMode.put(req.getSession().getId(), ADD);
         rsp.sendRedirect2("createslaves");
     }
+
+    /**
+     * Redirects to Slaves management, also setting usermode to MANAGE.
+     * @param req StaplerRequest
+     * @param rsp StaplerResponse to redirect with
+     * @throws IOException if redirection goes wrong
+     */
+    public void doManageRedirect(StaplerRequest req, StaplerResponse rsp) throws IOException {
+        Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
+        app.checkPermission(getRequiredPermission());
+        userMode.put(req.getSession().getId(), MANAGE);
+        if (app.getNodes().isEmpty()) {
+            throw new Failure(Messages.EmptyNodeList());
+        }
+        rsp.sendRedirect2("slavefilter");
+    }
+
+
 
     //TODO: Add doLaunchRedirect that sets the usermode for the specific session and redirects to the slavefilter page
 
@@ -362,6 +402,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
     public void doDeleteRedirect(StaplerRequest req, StaplerResponse rsp)
             throws IOException {
         Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
         app.checkPermission(getRequiredPermission());
         userMode.put(req.getSession().getId(), DELETE);
         if (app.getNodes().isEmpty()) {
@@ -389,6 +430,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      */
     @JavaScriptMethod
     public synchronized JSONArray doSearch(String sessionId, JSONObject searchParameters) {
+        // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
         NodeList nodeList = SearchSlaves.getNodes(searchParameters);
         nodeList.sortByName();
@@ -405,6 +447,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      */
     public synchronized void doSelectSlaves(StaplerRequest req, StaplerResponse rsp) throws IOException {
         Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
         app.checkPermission(getRequiredPermission());
         NodeList newList = new NodeList();
         JSONObject json;
@@ -440,6 +483,8 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
             rsp.sendRedirect2("settingsselector");
         } else if (userMode.get(currentSessionId) == DELETE) {
             rsp.sendRedirect2("deleteconfirmation");
+        } else if (userMode.get(currentSessionId) == MANAGE) {
+            rsp.sendRedirect2("manageoptions");
         } else {
             //Redirect to home, so that a user mode can be set
             rsp.sendRedirect2("");
@@ -454,6 +499,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @throws ServletException if something is wrong with the submitted form.
      */
     public synchronized void doApply(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+        // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
         String currentSessionId = req.getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
@@ -516,6 +562,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      */
     public synchronized void doDeleteSlaves(StaplerRequest req, StaplerResponse rsp) throws IOException {
         Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
         app.checkPermission(getRequiredPermission());
         String currentSessionId = req.getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
@@ -562,6 +609,7 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
                                             @QueryParameter boolean extendedEnvInterpretation)
             throws IOException, Descriptor.FormException {
         Hudson app = Hudson.getInstance();
+        // Throws exception on failure. This is handled at a higher level.
         app.checkPermission(getRequiredPermission());
         NodeList nodeList = new NodeList();
         String currentSessionId = req.getSession().getId();
@@ -660,4 +708,197 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         return names;
     }
 
+    /**
+     * Requests the selected slaves to go online.
+     * @param rsp StaplerResponse.
+     * @param req StaplerRequest.
+     * @return false if no nodes were selected, otherwise true
+     */
+    @JavaScriptMethod
+    public boolean takeOnline(StaplerRequest req, StaplerResponse rsp) {
+        // Throws exception on failure. This is handled at a higher level.
+        Hudson.getInstance().checkPermission(getRequiredPermission());
+        String currentSessionId = req.getSession().getId();
+        NodeList nodeList = getNodeList(currentSessionId);
+
+        boolean result = false;
+        if (nodeList != null) {
+            result = true;
+            for (Node node : nodeList) {
+                Computer computer = node.toComputer();
+                if (computer != null) {
+                    computer.setTemporarilyOffline(false, null);
+                }
+
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Requests the selected slaves to go offline.
+     * @param reason String.
+     * @param rsp StaplerResponse.
+     * @param req StaplerRequest.
+     * @return false if no nodes were selected, otherwise true
+     */
+    @JavaScriptMethod
+    public boolean takeOffline(String reason, StaplerRequest req, StaplerResponse rsp) {
+        // Throws exception on failure. This is handled at a higher level.
+        Hudson.getInstance().checkPermission(getRequiredPermission());
+        String currentSessionId = req.getSession().getId();
+        NodeList nodeList = getNodeList(currentSessionId);
+
+        boolean result = false;
+        if (nodeList != null) {
+            result = true;
+            reason = Util.fixEmptyAndTrim(reason);
+            for (Node node : nodeList) {
+                Computer computer = node.toComputer();
+                if (computer != null) {
+                    if (reason == null) {
+                        computer.setTemporarilyOffline(true, null);
+                    } else {
+                        OfflineCause cause = new OfflineCause.UserCause(User.current(), reason);
+                        computer.setTemporarilyOffline(true, cause);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Connects (not forced) to selected slaves.
+     * @param rsp StaplerResponse.
+     * @param req StaplerRequest.
+     * @return false if no nodes were selected, otherwise true
+     */
+    @JavaScriptMethod
+    public boolean connectSlaves(StaplerRequest req, StaplerResponse rsp) {
+        // Throws exception on failure. This is handled at a higher level.
+        Hudson.getInstance().checkPermission(getRequiredPermission());
+        String currentSessionId = req.getSession().getId();
+        NodeList nodeList = getNodeList(currentSessionId);
+
+        boolean result = false;
+        if (nodeList != null) {
+            result = true;
+            for (Node node : nodeList) {
+                Computer computer = node.toComputer();
+                if (computer != null && computer.getChannel() == null) {
+                    computer.connect(false);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Disconnects from selected slaves.
+     * @param reason the reason for disconnecting
+     * @param rsp StaplerResponse.
+     * @param req StaplerRequest.
+     * @return false if no nodes were selected, otherwise true
+     */
+    @JavaScriptMethod
+    public boolean disconnectSlaves(String reason, StaplerRequest req, StaplerResponse rsp) {
+        // Throws exception on failure. This is handled at a higher level.
+        Hudson.getInstance().checkPermission(getRequiredPermission());
+        String currentSessionId = req.getSession().getId();
+        NodeList nodeList = getNodeList(currentSessionId);
+
+        boolean result = false;
+        if (nodeList != null) {
+            result = true;
+            reason = Util.fixEmptyAndTrim(reason);
+            for (Node node : nodeList) {
+                Computer computer = node.toComputer();
+                if (computer != null) {
+                    if (reason == null) {
+                        computer.disconnect(null);
+                    } else {
+                        OfflineCause cause = new OfflineCause.UserCause(User.current(), reason);
+                        computer.disconnect(cause);
+                    }
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * This is needed by settingsselector.jelly to list the Node properties the user can add or change.
+     * @return the {@link NodePropertyDescriptor} for {@link hudson.slaves.DumbSlave}
+     */
+    public List<NodePropertyDescriptor> getNodePropertyDescriptors() {
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        return descriptors;
+    }
+
+    /**
+     * This is needed by settingsselector.jelly to list the Node properties the user can remove.
+     * @return the {@link NodePropertyDescriptor} for {@link hudson.slaves.DumbSlave}
+     */
+    public List<RemovePropertyDescriptor> getRemovePropertyDescriptor() {
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        List<RemovePropertyDescriptor> removeProperyDescriptors = new LinkedList<RemovePropertyDescriptor>();
+        for (NodePropertyDescriptor descriptor : descriptors) {
+            removeProperyDescriptors.add(new RemovePropertyDescriptor(descriptor));
+        }
+
+        return removeProperyDescriptors;
+    }
+
+    /**
+     * Maps a class name to a real descriptor name. This is to have something readable to show the user when
+     * properties are removed.
+     * @param className the class name to match with a descriptor name.
+     * @return the readable name match
+     */
+    public String mapClassToDescriptorName(String className) {
+        String descriptorName = "";
+
+        List<NodePropertyDescriptor> descriptors = Functions.getNodePropertyDescriptors(DumbSlave.class);
+        for (NodePropertyDescriptor descriptor : descriptors) {
+            if (descriptor.getClass().getName().equals(className)) {
+                descriptorName = descriptor.getDisplayName();
+                break;
+            }
+        }
+
+        return descriptorName;
+    }
+
+    /**
+     * Descriptor to show in the removal list for node properties.
+     * The point is that it should only have a name that can be used to select properties to remove
+     * without showing the whole descriptor.
+     */
+    public static class RemovePropertyDescriptor extends Descriptor {
+
+        /**
+         * The real descriptor this instance is bound to.
+         */
+        private final Descriptor propertyDescriptor;
+
+        /**
+         * Default constructor. sends the class of the bounded propertyDescriptor to Descriptor base class
+         * which then sets it as clazz attribute for this class.
+         * @param propertyDescriptor the bounded ordinary descriptor of the node property
+         */
+        public RemovePropertyDescriptor(Descriptor propertyDescriptor) {
+            super(propertyDescriptor.getClass());
+            this.propertyDescriptor = propertyDescriptor;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return propertyDescriptor.getDisplayName();
+        }
+    }
 }

@@ -1,7 +1,7 @@
 /*
  *  The MIT License
  *
- *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright (c) 2011 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -24,21 +24,43 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
+import com.gargoylesoftware.htmlunit.HttpMethod;
+import com.gargoylesoftware.htmlunit.WebRequestSettings;
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlOption;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.nodes.JobRestrictionProperty;
+import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.restrictions.job.RegexNameRestriction;
 import hudson.model.Node;
+import hudson.model.Slave;
 import hudson.slaves.CommandLauncher;
 import hudson.slaves.DumbSlave;
+import hudson.slaves.EnvironmentVariablesNodeProperty;
+import hudson.slaves.NodeProperty;
 import hudson.slaves.RetentionStrategy;
+import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.lang.RandomStringUtils;
 import org.jvnet.hudson.test.HudsonTestCase;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
-import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.*;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.ADD_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.AVAILABILITY;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.DESCRIPTION;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.LAUNCH_METHOD;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.NBR_OF_EXECUTORS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOTE_FS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.REMOVE_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.SET_LABELS;
+import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.UIHudsonTest.Change.USAGE_MODE;
 import static hudson.model.Node.Mode.EXCLUSIVE;
+import static hudson.slaves.EnvironmentVariablesNodeProperty.Entry;
 
 //CS IGNORE MagicNumber FOR NEXT 1000 LINES. REASON: Tests.
 
@@ -52,6 +74,7 @@ public class UIHudsonTest extends HudsonTestCase {
     static final String CONFIGURE = "Configure slaves";
     static final String DELETE = "Delete slaves";
     static final String ADD = "Add slaves";
+    static final String MANAGE = "Manage slaves";
 
     WebClient webClient;
     HtmlPage currentPage;
@@ -78,6 +101,221 @@ public class UIHudsonTest extends HudsonTestCase {
                 null, "label1", null, null, Collections.EMPTY_LIST);
         hudson.addNode(slave2);
         hudson.addNode(slave3);
+    }
+
+    /**
+     * Testing the help links on the various pages affected by multislave.
+     * @throws Exception if so.
+     */
+    public void testAllHelpLinksFound() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        List<?> helpButtons = currentPage.selectNodes("//a[@class='help-button']");
+        assertNotNull(helpButtons);
+        assertFalse(helpButtons.isEmpty());
+
+        // The click() results in an Ajax call. If it fails, the test will fail
+        for (HtmlAnchor helpButton : (List<HtmlAnchor>)helpButtons) {
+            helpButton.click();
+        }
+    }
+
+    /**
+     * Test setting properties for a number of nodes.
+     * The tests mocks a form containing the desired changes.
+     * This was done since HTMLUNIT's javascript support isn't good enough.
+     * @throws Exception on failure.
+     */
+    public void testSetNodeProperties() throws Exception {
+        setUpNodeProperties();
+
+        List<Node> registeredNodes = hudson.getNodes();
+        List<NodeProperty<?>> list = registeredNodes.get(0).getNodeProperties().toList();
+
+        EnvironmentVariablesNodeProperty env = (EnvironmentVariablesNodeProperty)list.get(0);
+        assertTrue(env.getEnvVars().containsKey("FOODPREF"));
+        assertTrue(env.getEnvVars().containsValue("BURGERS"));
+    }
+
+    /**
+     * Tests that the settings selector page is auto populated with common
+     * node properties.
+     * @throws Exception on failure.
+     */
+    public void testNodePropertiesAutoPopulation() throws Exception {
+        setUpNodeProperties();
+
+        currentPage = webClient.goTo(NodeManageLink.getInstance().getUrlName());
+
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        assertTrue("The settings page should contain BURGERS (common key)",
+                currentPage.asText().contains("BURGERS"));
+    }
+
+    /**
+     * Test removing properties for a number of nodes.
+     * The tests mocks a form containing the desired changes.
+     * This was done since HTMLUNIT's javascript support isn't good enough.
+     * @throws Exception on failure.
+     */
+    public void testRemoveNodeProperties() throws Exception {
+        //First make sure the nodes have some random properties:
+        for (Node node : jenkins.getNodes()) {
+            Entry entry = new Entry(
+                    RandomStringUtils.random(5), RandomStringUtils.random(5));
+            node.getNodeProperties().add(new EnvironmentVariablesNodeProperty(entry));
+        }
+
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"removeProperties\": "
+                + "{\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty$DescriptorImpl\",\"kind\": "
+                + "\"hudson.slaves.EnvironmentVariablesNodeProperty$DescriptorImpl\"}}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+        webClient.getPage(requestSettings);
+
+        for (Node node : jenkins.getNodes()) {
+            assertTrue("Slave should not have any node properties", node.getNodeProperties().isEmpty());
+        }
+    }
+
+    /**
+     * This test tries to configure the job restrictions plugin with help from multislave.
+     * @throws Exception on failure.
+     */
+    public void testConfigureJobRestrictionsNodeProperty() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": { \"\": \"5\", \"jobRestriction\": "
+                + "{ \"stapler-class\": \"com.synopsys.arc.jenkinsci.plugins.jobrestrictions."
+                + "restrictions.job.RegexNameRestriction\", \"regexExpression\": \"testtest\", "
+                + "\"checkShortName\": false }, \"stapler-class\": \"com.synopsys.arc.jenkinsci."
+                + "plugins.jobrestrictions.nodes.JobRestrictionProperty\", \"kind\": \"com.synopsys.arc.jenkinsci."
+                + "plugins.jobrestrictions.nodes.JobRestrictionProperty\" }}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+
+        webClient.getPage(requestSettings);
+
+        List<Node> registeredNodes = hudson.getNodes();
+        List<NodeProperty<?>> list = ((Slave)registeredNodes.get(0)).getNodeProperties().toList();
+
+        JobRestrictionProperty jobRestrictionProperty = (JobRestrictionProperty)list.get(0);
+        RegexNameRestriction restriction = (RegexNameRestriction)jobRestrictionProperty.getJobRestriction();
+        assertEquals(restriction.getRegexExpression(), "testtest");
+
+    }
+
+    /**
+     * Test for taking several nodes offline by using the UI.
+     * @throws Exception if so.
+     */
+    public void testTakeNodesOffline() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement offlineReason = currentPage.getElementById("offlineReason");
+        HtmlElement takeOffline = currentPage.getElementById("takeOffline");
+
+        offlineReason.setTextContent("Testing...");
+        takeOffline.fireEvent("click");
+
+        assertTrue(slave0.toComputer().isTemporarilyOffline());
+        assertTrue(slave1.toComputer().isTemporarilyOffline());
+    }
+
+    /**
+     * Test for taking several nodes online by using the UI.
+     * Online in this context means not temporarily offline.
+     * @throws Exception if so.
+     */
+    public void testBringNodesOnline() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        slave0.toComputer().setTemporarilyOffline(true);
+        slave1.toComputer().setTemporarilyOffline(true);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement takeOnline = currentPage.getElementById("takeOnline");
+
+        takeOnline.fireEvent("click");
+
+        assertFalse(slave0.toComputer().isTemporarilyOffline());
+        assertFalse(slave1.toComputer().isTemporarilyOffline());
+    }
+
+    /**
+     * Test for connecting to several nodes from the UI.
+     * @throws Exception if so.
+     */
+    public void testConnectToNodes() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement connect = currentPage.getElementById("connectSlaves");
+
+        connect.fireEvent("click");
+
+        assertNotNull(slave0.toComputer().getChannel());
+        assertNotNull(slave1.toComputer().getChannel());
+    }
+
+    /**
+     * Test for disconnecting several nodes from the UI.
+     * @throws Exception if so.
+     */
+    public void testDisconnectFromNodes() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(MANAGE);
+
+        //Takes the web client to "manageoptions"-page after selecting slaves.
+        searchForAndSelectAllSlaves();
+
+        HtmlElement disconnect = currentPage.getElementById("disconnectSlaves");
+
+        disconnect.fireEvent("click");
+
+        assertNull(slave0.toComputer().getChannel());
+        assertNull(slave1.toComputer().getChannel());
     }
 
     /**
@@ -817,6 +1055,32 @@ public class UIHudsonTest extends HudsonTestCase {
         if (change != AVAILABILITY) {
             assertFalse(pageAsText.contains("Availability"));
         }
+    }
+
+    /**
+     * Sets up a common {@link NodeProperty} for all slaves.
+     * @throws Exception if something goes wrong
+     */
+    private void setUpNodeProperties() throws Exception {
+        //Takes the web client to "search for slaves"-page.
+        clickLinkOnCurrentPage(CONFIGURE);
+
+        searchForAndSelectAllSlaves();
+
+        // Instead of requesting the page directly we create a WebRequestSettings object
+        WebRequestSettings requestSettings = new WebRequestSettings(
+                webClient.createCrumbedUrl(NodeManageLink.URL + "/apply"), HttpMethod.POST);
+
+        // Then we set the request parameters
+        List<NameValuePair> params = new ArrayList<NameValuePair>();
+        params.add(new NameValuePair("json", "{\"addOrChangeProperties\": {\"env\": { \"key\": \"FOODPREF\",\"value\": "
+                + "\"BURGERS\"},\"stapler-class\": \"hudson.slaves.EnvironmentVariablesNodeProperty\",\"kind\": "
+                + "\"hudson.slaves.EnvironmentVariablesNodeProperty\"}}"));
+        params.add(new NameValuePair("Submit", "Save"));
+
+        requestSettings.setRequestParameters(params);
+
+        webClient.getPage(requestSettings);
     }
 
     /**

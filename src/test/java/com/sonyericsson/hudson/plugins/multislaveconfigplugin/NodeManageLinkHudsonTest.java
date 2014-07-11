@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +28,7 @@ package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 import com.gargoylesoftware.htmlunit.ElementNotFoundException;
 import com.gargoylesoftware.htmlunit.FailingHttpStatusCodeException;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.os.windows.ManagedWindowsServiceLauncher;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -35,6 +37,17 @@ import org.jvnet.hudson.test.recipes.LocalData;
  * @author Nicklas Nilsson &lt;nicklas3.nilsson@sonyericsson.com&gt;
  */
 public class NodeManageLinkHudsonTest extends HudsonTestCase {
+
+
+    /**
+     * Tests{@link NodeManageLink#isManagedWindowsServiceLauncher(hudson.slaves.ComputerLauncher)}.
+     * Testing that a ManagedWindowsServiceLauncher makes this method return true.
+     */
+    @LocalData
+    public void testIsManagedWindowsServiceLauncher() {
+        assertTrue(NodeManageLink.getInstance().isManagedWindowsServiceLauncher(
+                new ManagedWindowsServiceLauncher("", "")));
+    }
 
     /**
      * Checks that anonymous users cant reach the plugins URL.

@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -29,6 +30,9 @@ import hudson.model.Node;
 import hudson.slaves.DumbSlave;
 import net.sf.json.JSONObject;
 
+import java.util.HashSet;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -54,6 +58,14 @@ public class SearchSlaves {
     public static NodeList getNodes(JSONObject searchParameters) {
         NodeList returnList = new NodeList(Hudson.getInstance().getNodes());
         NodeList masterList = new NodeList(Hudson.getInstance().getNodes());
+
+        //Preparing array for full name search:
+        Set<String> fullNameSearch = null;
+        String fullNameString = (String)searchParameters.get("fullNames");
+        if (fullNameString != null && !fullNameString.isEmpty()) {
+            fullNameSearch = new HashSet<String>(
+                    Arrays.asList(fullNameString.split("\\s+")));
+        }
 
         for (Node node : masterList) {
             if ((node instanceof DumbSlave)) {
@@ -82,6 +94,9 @@ public class SearchSlaves {
                 }
                 searchString = (String)searchParameters.get("name");
                 if (!hasSearchHit(slave, searchString, slave.getNodeName())) {
+                    returnList.remove(node);
+                }
+                if (fullNameSearch != null && !fullNameSearch.contains(slave.getNodeName())) {
                     returnList.remove(node);
                 }
             } else { returnList.remove(node); }

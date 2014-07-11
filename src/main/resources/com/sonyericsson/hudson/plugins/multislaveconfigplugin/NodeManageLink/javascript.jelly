@@ -2,6 +2,7 @@
  *  The MIT License
  *
  *  Copyright 2011 Sony Ericsson Mobile Communications. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -51,7 +52,9 @@
           }
           okButton.set('disabled',state(),false);
         }
-        updateOk(okButton.getForm());
+        if (typeof okButton != "undefined") { //This button only exists on some pages
+            updateOk(okButton.getForm());
+        }
 
         //To lock the input fields on the settingsSelector.jelly page
         //Applied on drop-down lists
@@ -113,6 +116,14 @@
             updateTable();
         }
 
+        //Sets the buttons for delete to disabled and redirects the user to the confirmation page.
+        //To be used when user presses "Yes" when deleting slaves.
+        function deleteSlavesRedirect() {
+            yesDeleteButton.set('disabled',true,true);
+            noDeleteButton.set('disabled',true,true);
+            document.location='deleteSlaves';
+        }
+
         //Submits the search parameters to a java class that preforms a search.
         //Listing the result from the search.
         function updateTable() {
@@ -121,7 +132,8 @@
             "executors": document.getElementById('executors').value,
             "labels": document.getElementById('labels').value,
             "remoteFS": document.getElementById('remoteFS').value,
-            "description": document.getElementById('description').value
+            "description": document.getElementById('description').value,
+            "fullNames": document.getElementById('fullNames').value
             };
 
             it.doSearch('${sessionId}', searchParameters, function(t) {
@@ -157,7 +169,7 @@
                         var statusCell = newRow.insertCell(1);
                         statusCell.innerHTML = '<img src="${imagesURL}/32x32/' + object.icon + '" width="32" height="32" alt="' + object.iconAltText + '"/>';
                         var nameCell = newRow.insertCell(2);
-                        nameCell.innerHTML = '<a href="${rootURL}/computer/' + object.name + '" target="_blank">' + object.name + '</a>';
+                        nameCell.innerHTML = '<a href="${rootURL}/computer/' + object.name + '/" target="_blank">' + object.name + '</a>';
 
 
                         var labelsCell = newRow.insertCell(3);
