@@ -995,11 +995,63 @@ public class UIHudsonTest extends HudsonTestCase {
     }
 
     /**
-     * Tests that the user copy the settings from one slave to some new ones.
+     * Tests that the user can copy the settings from one slave to some new ones.
      * @throws Exception if so.
      */
     public void testAddSlavesCopy() throws Exception {
-        int slaveCountsAfter = hudson.getNodes().size() + 3;
+        int expectedSlaveCount = hudson.getNodes().size() + 3;
+        submit(prepareCopySlaves());
+
+        //Checks that the slaves are added and that nothing more happens.
+        assertEquals(2, hudson.getNode("slave13").getNumExecutors());
+        assertEquals("This is the description on dumbSlave1", hudson.getNode("slave14").getNodeDescription());
+        assertEquals("HOME/slave15", ((DumbSlave)hudson.getNode("slave15")).getRemoteFS());
+        assertEquals(expectedSlaveCount, hudson.getNodes().size());
+    }
+
+    /**
+     * Makes sure that {@link hudson.slaves.NodeProperty}s are copied to the new slave
+     * when cloning slaves if they are not manually removed.
+     * @throws Exception if something goes wrong
+     */
+    public void testCopiedSlavesKeepNodeProperties() throws Exception {
+        Node originalSlave = hudson.getNode("slave2");
+        Entry propertyEntry = new Entry("key", "value");
+        EnvironmentVariablesNodeProperty property = new EnvironmentVariablesNodeProperty(propertyEntry);
+        originalSlave.getNodeProperties().add(property);
+
+        submit(prepareCopySlaves());
+
+        assertEquals("value", ((EnvironmentVariablesNodeProperty)hudson.getNode("slave13")
+                .getNodeProperties().get(0)).getEnvVars().get("key"));
+    }
+
+    /**
+     * Makes sure that {@link hudson.slaves.NodeProperty}s are not copied to the new slave
+     * when cloning slaves if they are manually removed.
+     * @throws Exception if something goes wrong
+     */
+    public void testCopySlavesRemoveNodeProperties() throws Exception {
+        Node originalSlave = hudson.getNode("slave2");
+        Entry propertyEntry = new Entry("key", "value");
+        EnvironmentVariablesNodeProperty property = new EnvironmentVariablesNodeProperty(propertyEntry);
+        originalSlave.getNodeProperties().add(property);
+
+        HtmlForm settings = prepareCopySlaves();
+
+        //Clear all Node Property settings:
+        settings.getElementsByAttribute("div", "name", "addOrChangeProperties").get(0).remove();
+        submit(settings);
+
+        assertTrue(hudson.getNode("slave13").getNodeProperties().isEmpty());
+    }
+
+    /**
+     * Prepares copying of slaves.
+     * @return settings form that can be submitted to execute the copying
+     * @throws Exception if something goes wrong
+     */
+    private HtmlForm prepareCopySlaves() throws Exception {
         clickLinkOnCurrentPage(ADD);
 
         //Fill in information about the new slaves.
@@ -1010,15 +1062,7 @@ public class UIHudsonTest extends HudsonTestCase {
         //Takes the web client to "settings selector"-page.
         currentPage = submit(form);
 
-        //Creating the slaves.
-        form = currentPage.getFormByName("settingsForm");
-        currentPage = submit(form);
-
-        //Checks that the slaves is added and that nothing more.
-        assertEquals(2, hudson.getNode("slave13").getNumExecutors());
-        assertEquals("This is the description on dumbSlave1", hudson.getNode("slave14").getNodeDescription());
-        assertEquals("HOME/slave15", ((DumbSlave)hudson.getNode("slave15")).getRemoteFS());
-        assertEquals(slaveCountsAfter, hudson.getNodes().size());
+        return currentPage.getFormByName("settingsForm");
     }
 
     /**
