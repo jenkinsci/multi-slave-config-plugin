@@ -24,6 +24,7 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
+import com.sonymobile.jenkins.plugins.lenientshutdown.PluginImpl;
 import hudson.Extension;
 import hudson.Functions;
 import hudson.Util;
@@ -785,6 +786,38 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
     }
 
     /**
+     * Requests the selected slaves to go offline leniently. Only possible if Lenient Shutdown Plugin is installed.
+     * @param rsp StaplerResponse.
+     * @param req StaplerRequest.
+     * @return false if no nodes were selected or something else goes wrong, otherwise true
+     */
+    @JavaScriptMethod
+    public boolean takeOfflineLeniently(StaplerRequest req, StaplerResponse rsp) {
+        // Throws exception on failure. This is handled at a higher level.
+        Hudson.getInstance().checkPermission(getRequiredPermission());
+        String currentSessionId = req.getSession().getId();
+        NodeList nodeList = getNodeList(currentSessionId);
+
+        boolean takenOffline = false;
+
+        if (isLenientShutdownPluginInstalled()) {
+            PluginImpl lenientShutdownInstance = PluginImpl.getInstance();
+
+            if (nodeList != null) {
+                takenOffline = true;
+                for (Node node : nodeList) {
+                    String nodeName = node.getNodeName();
+                    if (!lenientShutdownInstance.isNodeShuttingDown(nodeName)) {
+                        lenientShutdownInstance.setNodeOffline(node.toComputer());
+                    }
+                }
+            }
+        }
+
+        return takenOffline;
+    }
+
+    /**
      * Connects (not forced) to selected slaves.
      * @param rsp StaplerResponse.
      * @param req StaplerRequest.
@@ -809,6 +842,14 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         }
 
         return result;
+    }
+
+    /**
+     * Checks if Lenient Shutdown Plugin is installed.
+     * @return true if the plugin is installed, otherwise false
+     */
+    public static boolean isLenientShutdownPluginInstalled() {
+        return Jenkins.getInstance().getPlugin("lenientshutdown") != null;
     }
 
     /**

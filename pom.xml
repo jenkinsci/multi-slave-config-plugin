@@ -223,6 +223,12 @@
             <artifactId>windows-slaves</artifactId>
             <version>1.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.sonymobile.jenkins.plugins.lenientshutdown</groupId>
+            <artifactId>lenientshutdown</artifactId>
+            <version>1.0.0</version>
+            <optional>true</optional>
+        </dependency>
 
     </dependencies>
 

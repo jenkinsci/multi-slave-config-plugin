@@ -1,7 +1,7 @@
 <!--
  *  The MIT License
  *
- *  Copyright 2014 Sony Mobile Communications AB. All rights reserved.
+ *  Copyright 2014 Sony Mobile Communications Inc. All rights reserved.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to deal
@@ -39,39 +39,48 @@
 
         </l:header>
 
-
-
-
         <l:main-panel>
             <h3>${it.displayName} - ${%Manage slaves}</h3>
-            ${%In this section you can manage the slaves chosen in the previous page.}
+            ${%ManageInfo}
                 <table class="sortable pane bigtable">
                     <tr align="left"> </tr>
                     <tr align="left">
                         <th class="table-cell">
-                            <p>${%Bring the selected slaves online by pressing the button.}</p>
+                            <p>${%OnlineButtonInfo}</p>
                             <input id="takeOnline" value="${%Bring slaves online}" class="yui-button"/>
                             <p id="onlineResponse"><st:nbsp/></p>
                         </th>
                         <th class="table-cell">
-                            <p>${%Take the selected slaves temporarily offline by pressing the button.}</p>
-                            <p>${%A reason can be typed into the box.}</p>
-                            <p>${%If a node is already offline, this will only change the offline reason.}</p>
+                            <j:choose>
+                                <j:when test="${it.lenientShutdownPluginInstalled}">
+                                    <p>${%TempOfflineTwoButtonsInfo}</p>
+                                    <p>${%LenientShutdownUsage}</p>
+                                    <input id="takeOfflineLeniently" value="${%Take slaves offline leniently}" class="yui-button"/>
+                                    <br/><br/>
+                                </j:when>
+                                <j:otherwise>
+                                    <p>${%TempOfflineOneButtonInfo}</p>
+                                </j:otherwise>
+                            </j:choose>
+
+                            <p>${%OfflineReason}</p>
+                            <p>${%OfflineReasonChange}</p>
                             <input style="width: 100%;" type="text" placeholder="Reason" name="offlineReason" id="offlineReason"/>
                             <br/>
                             <input id="takeOffline" value="${%Take slaves offline}" class="yui-button"/>
+
                             <p id="offlineResponse"><st:nbsp/></p>
                         </th>
                     </tr>
                     <tr align="left">
                         <th class="table-cell">
-                            <p>${%Connect to the selected slaves by pressing the button.}</p>
+                            <p>${%ConnectButtonInfo}</p>
                             <input id="connectSlaves" value="${%Connect to slaves}" class="yui-button"/>
                             <p id="connectResponse"><st:nbsp/></p>
                         </th>
                         <th class="table-cell">
-                            <p>${%Disconnect from selected slaves by pressing the button.}</p>
-                            <p>${%A reason can by typed into the box.}</p>
+                            <p>${%DisconnectButtonInfo}</p>
+                            <p>${%DisconnectReason}</p>
                             <input style="width: 100%;" type="text" placeholder="Reason" name="disconnectReason" id="disconnectReason"/>
                             <br/>
                             <input id="disconnectSlaves" value="${%Disconnect from slaves}" class="yui-button"/>
@@ -88,35 +97,40 @@
 
                     var nodeManageLink = <st:bind value="${it}"/>
 
-                    makeButton(document.getElementById('takeOnline'), takeOnline);
-                    function takeOnline() {
+                    makeButton(document.getElementById('takeOnline'), function() {
                         nodeManageLink.takeOnline(function(result) {
                             displayResult('onlineResponse', result);
                         });
-                    }
+                    });
 
-                    makeButton(document.getElementById('takeOffline'), takeOffline);
-                    function takeOffline() {
+                    makeButton(document.getElementById('takeOffline'), function() {
                         var reason = document.getElementById('offlineReason').value;
                         nodeManageLink.takeOffline(reason, function(result) {
                             displayResult('offlineResponse', result);
                         });
-                    }
+                    });
 
-                    makeButton(document.getElementById('connectSlaves'), connectSlaves);
-                    function connectSlaves() {
-                        nodeManageLink.connectSlaves(function(result) {
-                            displayResult('connectResponse', result);
+                    var lenientOfflineButton = document.getElementById('takeOfflineLeniently');
+                    if (lenientOfflineButton != null) {
+                        makeButton(lenientOfflineButton, function() {
+                            nodeManageLink.takeOfflineLeniently(function(result) {
+                                displayResult('offlineResponse', result);
+                            });
                         });
                     }
 
-                    makeButton(document.getElementById('disconnectSlaves'), disconnectSlaves);
-                    function disconnectSlaves() {
+                    makeButton(document.getElementById('connectSlaves'), function() {
+                        nodeManageLink.connectSlaves(function(result) {
+                            displayResult('connectResponse', result);
+                        });
+                    });
+
+                    makeButton(document.getElementById('disconnectSlaves'), function() {
                         var reason = document.getElementById('disconnectReason').value;
                         nodeManageLink.disconnectSlaves(reason, function(result) {
                             displayResult('disconnectResponse', result);
                         });
-                    }
+                    });
 
                     /**
                     * A text response to the user pressing the button saying
