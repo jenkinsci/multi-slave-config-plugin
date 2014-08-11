@@ -46,6 +46,7 @@ import hudson.slaves.NodePropertyDescriptor;
 import hudson.slaves.OfflineCause;
 import hudson.slaves.RetentionStrategy;
 import hudson.slaves.SimpleScheduledRetentionStrategy;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
@@ -526,9 +527,22 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
             //Checks if the labels to remove existed before applying the change,
             //so that the confirmation page can show if the remove was successful:
             hadLabels.put(req.getSession().getId(), nodeList.hasLabels((String)settings.get("removeLabelString")));
+
+            //Makes sure that Node Properties that are automatically populated and then removed by user from the
+            //setting selector page are not saved when cloning another slave. It works to populate the remove list
+            //since change settings has higher precedence than remove:
+            if (currentUsermode == ADD) {
+                List<String> allProperties = new LinkedList<String>();
+                for (NodePropertyDescriptor descriptor : Jenkins.getInstance().getNodePropertyDescriptors()) {
+                    allProperties.add(descriptor.getClass().getName());
+                }
+                settings.put("removeProperties", allProperties);
+            }
+
             nodeList = nodeList.changeSettings(settings);
             nodeListMap.put(currentSessionId, nodeList);
             lastChangedSettings.put(currentSessionId, settings);
+
             if (currentUsermode == CONFIGURE) {
                 //TODO: Structure up these logging messages
                 logger.log(Level.INFO, "User configured the following slaves: " + nodeList.toString() + "\n"
