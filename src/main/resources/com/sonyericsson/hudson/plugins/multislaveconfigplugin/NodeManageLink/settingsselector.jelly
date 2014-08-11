@@ -102,7 +102,9 @@
                     <f:block>
                         <br/>
                         ${%Select node properties to change in the list below}.
-                        ${%Properties that are common for all selected slaves are populated automatically}.
+                        <j:if test="${it.configureMode}">
+                            ${%Properties that are common for all selected slaves are populated automatically}.
+                        </j:if>
                         <f:hetero-list name="addOrChangeProperties"
                                 items="${nodeList.getNodeProperties()}"
                                 descriptors="${it.nodePropertyDescriptors}"
