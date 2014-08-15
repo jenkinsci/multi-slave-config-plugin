@@ -8,7 +8,7 @@
 
     <groupId>com.sonyericsson.hudson.plugins.multi-slave-config-plugin</groupId>
     <artifactId>multi-slave-config-plugin</artifactId>
-    <version>1.1.2-SNAPSHOT</version>
+    <version>1.2.0</version>
     <name>Multi slave config plugin</name>
     <description>This plugin allows administrators to configure, add and delete several dumb slaves at the same time.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/Multi+slave+config+plugin</url>
