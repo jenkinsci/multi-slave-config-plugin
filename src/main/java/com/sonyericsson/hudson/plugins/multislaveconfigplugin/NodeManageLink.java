@@ -725,15 +725,13 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
 
     /**
      * Requests the selected slaves to go online.
-     * @param rsp StaplerResponse.
-     * @param req StaplerRequest.
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOnline(StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOnline() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -754,15 +752,13 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
     /**
      * Requests the selected slaves to go offline.
      * @param reason String.
-     * @param rsp StaplerResponse.
-     * @param req StaplerRequest.
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOffline(String reason, StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOffline(String reason) {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -787,15 +783,13 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
 
     /**
      * Requests the selected slaves to go offline leniently. Only possible if Lenient Shutdown Plugin is installed.
-     * @param rsp StaplerResponse.
-     * @param req StaplerRequest.
      * @return false if no nodes were selected or something else goes wrong, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOfflineLeniently(StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOfflineLeniently() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean takenOffline = false;
@@ -819,15 +813,13 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
 
     /**
      * Connects (not forced) to selected slaves.
-     * @param rsp StaplerResponse.
-     * @param req StaplerRequest.
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean connectSlaves(StaplerRequest req, StaplerResponse rsp) {
+    public boolean connectSlaves() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -855,15 +847,13 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
     /**
      * Disconnects from selected slaves.
      * @param reason the reason for disconnecting
-     * @param rsp StaplerResponse.
-     * @param req StaplerRequest.
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean disconnectSlaves(String reason, StaplerRequest req, StaplerResponse rsp) {
+    public boolean disconnectSlaves(String reason) {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
