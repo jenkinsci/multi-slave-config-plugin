@@ -67,6 +67,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+
+
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.ADD;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.CONFIGURE;
 import static com.sonyericsson.hudson.plugins.multislaveconfigplugin.NodeManageLink.UserMode.DELETE;
@@ -100,6 +105,14 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
     private HashMap<String, HashMap> lastChangedSettings = new HashMap<String, HashMap>();
     private HashMap<String, Boolean> hadLabels = new HashMap<String, Boolean>();
     private static NodeManageLink instance;
+
+
+    /**
+     * Executors for taking offline and online nodes in parallel
+     */
+
+    ExecutorService executor = Executors.newFixedThreadPool(10);//creating a pool of 5 threads
+
 
     /**
      * Gets the descriptor.
@@ -730,10 +743,10 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOnline(StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOnline() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -742,7 +755,9 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
             for (Node node : nodeList) {
                 Computer computer = node.toComputer();
                 if (computer != null) {
-                    computer.setTemporarilyOffline(false, null);
+                    logger.warning("Taking online node: "+node.getNodeName());
+                    Runnable worker = new WorkerThread(computer,null,true);
+                    executor.execute(worker);
                 }
 
             }
@@ -759,11 +774,12 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOffline(String reason, StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOffline(String reason) {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
+
 
         boolean result = false;
         if (nodeList != null) {
@@ -773,14 +789,21 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
                 Computer computer = node.toComputer();
                 if (computer != null) {
                     if (reason == null) {
-                        computer.setTemporarilyOffline(true, null);
+                        logger.warning(String.format("Start taking offline with reason null:{0} ",node.getNodeName()));
+                       Runnable worker = new WorkerThread(computer,null,false);
+                       executor.execute(worker);
                     } else {
                         OfflineCause cause = new OfflineCause.UserCause(User.current(), reason);
-                        computer.setTemporarilyOffline(true, cause);
+                        logger.warning(String.format("Start taking offline with reason %s: %s",reason,node.getNodeName()));
+                        Runnable worker = new WorkerThread(computer,cause,false);
+                        executor.execute(worker);
                     }
                 }
             }
+
+            logger.warning("Finished taking offline all the nodes.!!!!");
         }
+
 
         return result;
     }
@@ -792,10 +815,10 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @return false if no nodes were selected or something else goes wrong, otherwise true
      */
     @JavaScriptMethod
-    public boolean takeOfflineLeniently(StaplerRequest req, StaplerResponse rsp) {
+    public boolean takeOfflineLeniently() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean takenOffline = false;
@@ -824,10 +847,10 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean connectSlaves(StaplerRequest req, StaplerResponse rsp) {
+    public boolean connectSlaves() {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -860,10 +883,10 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
      * @return false if no nodes were selected, otherwise true
      */
     @JavaScriptMethod
-    public boolean disconnectSlaves(String reason, StaplerRequest req, StaplerResponse rsp) {
+    public boolean disconnectSlaves(String reason) {
         // Throws exception on failure. This is handled at a higher level.
         Hudson.getInstance().checkPermission(getRequiredPermission());
-        String currentSessionId = req.getSession().getId();
+        String currentSessionId = Stapler.getCurrentRequest().getSession().getId();
         NodeList nodeList = getNodeList(currentSessionId);
 
         boolean result = false;
@@ -955,5 +978,30 @@ public class NodeManageLink extends ManagementLink implements Describable<NodeMa
         public String getDisplayName() {
             return propertyDescriptor.getDisplayName();
         }
+    }
+}
+
+
+class WorkerThread implements Runnable{
+
+    private OfflineCause cause;
+    private Computer computer;
+    private boolean online;
+
+    public WorkerThread(Computer computer,OfflineCause cause,boolean online){
+        this.cause = cause;
+        this.computer = computer;
+        this.online = online;
+    }
+    public void run() {
+
+        takeOnorOff();
+    }
+    private void takeOnorOff() {
+
+        if(online)
+            computer.setTemporarilyOffline(false, cause);
+        else
+            computer.setTemporarilyOffline(true,cause);
     }
 }
