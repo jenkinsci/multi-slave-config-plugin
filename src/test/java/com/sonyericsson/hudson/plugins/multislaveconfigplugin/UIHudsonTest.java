@@ -24,14 +24,14 @@
 
 package com.sonyericsson.hudson.plugins.multislaveconfigplugin;
 
-import com.gargoylesoftware.htmlunit.HttpMethod;
-import com.gargoylesoftware.htmlunit.WebRequestSettings;
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.html.HtmlForm;
-import com.gargoylesoftware.htmlunit.html.HtmlOption;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlSelect;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequestSettings;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlOption;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlSelect;
 import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.nodes.JobRestrictionProperty;
 import com.synopsys.arc.jenkinsci.plugins.jobrestrictions.restrictions.job.RegexNameRestriction;
 import hudson.model.Node;
@@ -353,7 +353,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_description").setChecked(true);
-        form.getInputByName("description").setValueAttribute(changedDescription);
+        form.getInputByName("description").setValue(changedDescription);
         //Takes the web client to "applied settings"-page.
         //submitForm(form);
         currentPage = submit(form);
@@ -387,7 +387,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_numExecutors").setChecked(true);
-        form.getInputByName("numExecutors").setValueAttribute(String.valueOf(changedExecutors));
+        form.getInputByName("numExecutors").setValue(String.valueOf(changedExecutors));
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -422,7 +422,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_remoteFS").setChecked(true);
-        form.getInputByName("remoteFS").setValueAttribute(changedRemoteFS);
+        form.getInputByName("remoteFS").setValue(changedRemoteFS);
         //Takes the web client to  "applied settings"-page.
         currentPage = submit(form);
 
@@ -457,7 +457,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_labelString").setChecked(true);
-        form.getInputByName("labelString").setValueAttribute(newLabels);
+        form.getInputByName("labelString").setValue(newLabels);
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -492,7 +492,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_addLabelString").setChecked(true);
-        form.getInputByName("addLabelString").setValueAttribute(labelsToAdd);
+        form.getInputByName("addLabelString").setValue(labelsToAdd);
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -527,7 +527,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("settingsForm");
         form.getInputByName("_removeLabelString").setChecked(true);
-        form.getInputByName("removeLabelString").setValueAttribute(labelsToRemove);
+        form.getInputByName("removeLabelString").setValue(labelsToRemove);
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -599,7 +599,7 @@ public class UIHudsonTest extends HudsonTestCase {
         HtmlSelect launcherSelect = (HtmlSelect)currentPage.getElementById("launcherId");
         HtmlOption commandLauncherOption = launcherSelect.getOptionByValue("hudson.slaves.CommandLauncher");
         launcherSelect.setSelectedAttribute(commandLauncherOption, true);
-        form.getInputByName("_.command").setValueAttribute(launchCommand);
+        form.getInputByName("_.command").setValue(launchCommand);
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -637,8 +637,8 @@ public class UIHudsonTest extends HudsonTestCase {
         HtmlSelect strategySelect = (HtmlSelect)currentPage.getElementById("retentionStrategyId");
         HtmlOption onDemandOption = strategySelect.getOptionByValue("hudson.slaves.RetentionStrategy$Demand");
         strategySelect.setSelectedAttribute(onDemandOption, true);
-        form.getInputByName("retentionStrategy.inDemandDelay").setValueAttribute(String.valueOf(inDemandDelay));
-        form.getInputByName("retentionStrategy.idleDelay").setValueAttribute(String.valueOf(idleDelay));
+        form.getInputByName("retentionStrategy.inDemandDelay").setValue(String.valueOf(inDemandDelay));
+        form.getInputByName("retentionStrategy.idleDelay").setValue(String.valueOf(idleDelay));
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -693,10 +693,10 @@ public class UIHudsonTest extends HudsonTestCase {
         form.getInputByName("_launcher").setChecked(true);
         form.getInputByName("_retentionStrategy").setChecked(true);
 
-        form.getInputByName("description").setValueAttribute(changedDescription);
-        form.getInputByName("numExecutors").setValueAttribute(String.valueOf(changedExecutors));
-        form.getInputByName("remoteFS").setValueAttribute(changedRemoteFS);
-        form.getInputByName("labelString").setValueAttribute(newLabels);
+        form.getInputByName("description").setValue(changedDescription);
+        form.getInputByName("numExecutors").setValue(String.valueOf(changedExecutors));
+        form.getInputByName("remoteFS").setValue(changedRemoteFS);
+        form.getInputByName("labelString").setValue(newLabels);
 
         HtmlSelect modeSelect = (HtmlSelect)currentPage.getElementById("mode");
         HtmlOption exclusiveOption = modeSelect.getOptionByValue(String.valueOf(newMode));
@@ -705,13 +705,13 @@ public class UIHudsonTest extends HudsonTestCase {
         HtmlSelect launcherSelect = (HtmlSelect)currentPage.getElementById("launcherId");
         HtmlOption commandLauncherOption = launcherSelect.getOptionByValue("hudson.slaves.CommandLauncher");
         launcherSelect.setSelectedAttribute(commandLauncherOption, true);
-        form.getInputByName("_.command").setValueAttribute(launchCommand);
+        form.getInputByName("_.command").setValue(launchCommand);
 
         HtmlSelect strategySelect = (HtmlSelect)currentPage.getElementById("retentionStrategyId");
         HtmlOption onDemandOption = strategySelect.getOptionByValue("hudson.slaves.RetentionStrategy$Demand");
         strategySelect.setSelectedAttribute(onDemandOption, true);
-        form.getInputByName("retentionStrategy.inDemandDelay").setValueAttribute(String.valueOf(inDemandDelay));
-        form.getInputByName("retentionStrategy.idleDelay").setValueAttribute(String.valueOf(idleDelay));
+        form.getInputByName("retentionStrategy.inDemandDelay").setValue(String.valueOf(inDemandDelay));
+        form.getInputByName("retentionStrategy.idleDelay").setValue(String.valueOf(idleDelay));
         //Takes the web client to "applied settings"-page.
         currentPage = submit(form);
 
@@ -791,11 +791,11 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("name").setValueAttribute("slave2");
-        form.getInputByName("description").setValueAttribute("This is the description on dumbSlave1");
-        form.getInputByName("remoteFS").setValueAttribute("HOME/slave2");
-        form.getInputByName("executors").setValueAttribute("2");
-        form.getInputByName("label").setValueAttribute("LABEL1");
+        form.getInputByName("name").setValue("slave2");
+        form.getInputByName("description").setValue("This is the description on dumbSlave1");
+        form.getInputByName("remoteFS").setValue("HOME/slave2");
+        form.getInputByName("executors").setValue("2");
+        form.getInputByName("label").setValue("LABEL1");
 
         //Search.
         currentPage = submit(form);
@@ -818,7 +818,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("name").setValueAttribute("slave2");
+        form.getInputByName("name").setValue("slave2");
         //Search.
         currentPage = submit(form);
 
@@ -840,7 +840,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("label").setValueAttribute("label1");
+        form.getInputByName("label").setValue("label1");
         //Search.
         currentPage = submit(form);
 
@@ -862,7 +862,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("description").setValueAttribute("DUMBSLAVE1");
+        form.getInputByName("description").setValue("DUMBSLAVE1");
         //Search.
         currentPage = submit(form);
 
@@ -884,7 +884,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("remoteFS").setValueAttribute("home/slave2");
+        form.getInputByName("remoteFS").setValue("home/slave2");
         //Search.
         currentPage = submit(form);
 
@@ -905,7 +905,7 @@ public class UIHudsonTest extends HudsonTestCase {
 
         HtmlForm form = currentPage.getFormByName("viewerForm");
 
-        form.getInputByName("executors").setValueAttribute("2");
+        form.getInputByName("executors").setValue("2");
         //Search.
         currentPage = submit(form);
 
@@ -926,10 +926,10 @@ public class UIHudsonTest extends HudsonTestCase {
 
         //Fill in information about the new slaves.
         HtmlForm form = currentPage.getFormByName("createSlavesForm");
-        form.getInputByName("mode").setValueAttribute("newSlave");
-        form.getInputByName("slaveName").setValueAttribute("slave");
-        form.getInputByName("first").setValueAttribute("06");
-        form.getInputByName("last").setValueAttribute("08");
+        form.getInputByName("mode").setValue("newSlave");
+        form.getInputByName("slaveName").setValue("slave");
+        form.getInputByName("first").setValue("06");
+        form.getInputByName("last").setValue("08");
         //Takes the web client to "settings selector"-page.
         currentPage = submit(form);
 
@@ -954,8 +954,8 @@ public class UIHudsonTest extends HudsonTestCase {
 
         //Fill in information about the new slaves.
         HtmlForm form = currentPage.getFormByName("createSlavesForm");
-        form.getInputByName("slaveNames").setValueAttribute("slave10 slave11 slave12");
-        form.getInputByName("mode").setValueAttribute("newSlave");
+        form.getInputByName("slaveNames").setValue("slave10 slave11 slave12");
+        form.getInputByName("mode").setValue("newSlave");
         //Takes the web client to "settings selector"-page.
         currentPage = submit(form);
 
@@ -980,8 +980,8 @@ public class UIHudsonTest extends HudsonTestCase {
 
         //Fill in information about the new slaves.
         HtmlForm form = currentPage.getFormByName("createSlavesForm");
-        form.getInputByName("slaveNames").setValueAttribute("slave10 slave10");
-        form.getInputByName("mode").setValueAttribute("newSlave");
+        form.getInputByName("slaveNames").setValue("slave10 slave10");
+        form.getInputByName("mode").setValue("newSlave");
         //Takes the web client to "settings selector"-page.
         currentPage = submit(form);
 
@@ -1056,9 +1056,9 @@ public class UIHudsonTest extends HudsonTestCase {
 
         //Fill in information about the new slaves.
         HtmlForm form = currentPage.getFormByName("createSlavesForm");
-        form.getInputByName("slaveNames").setValueAttribute("slave13 slave14 slave15");
-        form.getInputByName("mode").setValueAttribute("copySlave");
-        form.getInputByName("copyFrom").setValueAttribute("slave2");
+        form.getInputByName("slaveNames").setValue("slave13 slave14 slave15");
+        form.getInputByName("mode").setValue("copySlave");
+        form.getInputByName("copyFrom").setValue("slave2");
         //Takes the web client to "settings selector"-page.
         currentPage = submit(form);
 
